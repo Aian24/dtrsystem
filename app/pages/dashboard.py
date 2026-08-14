@@ -9,6 +9,9 @@ from app.components.cards import stat_card, info_card
 from app.theme.icons import IC
 from app.core.database import SessionLocal
 from app.core.models import Employee, Company, AttendanceLog, UploadSession
+import json
+from datetime import timedelta
+from sqlalchemy import func
 
 
 def get_dashboard_stats():
@@ -27,6 +30,17 @@ def get_dashboard_stats():
         last_upload = db.query(UploadSession).order_by(UploadSession.uploaded_at.desc()).first()
         last_upload_str = last_upload.uploaded_at.strftime("%b %d, %Y %I:%M %p") if last_upload else "—"
 
+        chart_labels = []
+        chart_data = []
+        for i in range(13, -1, -1):
+            d = today - timedelta(days=i)
+            count = db.query(func.count(func.distinct(AttendanceLog.employee_id))).filter(
+                AttendanceLog.log_datetime >= datetime.combine(d, datetime.min.time()),
+                AttendanceLog.log_datetime < datetime.combine(d + timedelta(days=1), datetime.min.time())
+            ).scalar() or 0
+            chart_labels.append(d.strftime("%b %d").replace(" 0", " "))
+            chart_data.append(count)
+
         return {
             "total_employees": total_employees,
             "total_companies": total_companies,
@@ -34,6 +48,8 @@ def get_dashboard_stats():
             "today_logs":      today_logs,
             "last_upload":     last_upload_str,
             "last_upload_count": last_upload.imported_count if last_upload else 0,
+            "chart_labels": json.dumps(chart_labels),
+            "chart_data": json.dumps(chart_data),
         }
     finally:
         db.close()
@@ -84,20 +100,12 @@ def dashboard_page():
                     <canvas id="attendanceChart" style="width:100%;height:220px;"></canvas>
                     ''')
 
-                    js_code = '''
+                    js_code = f'''
                       const canvas = document.getElementById("attendanceChart");
                       if (!canvas) return;
                       const ctx = canvas.getContext("2d");
-                      const days = 14;
-                      const labels = [];
-                      const data = [];
-                      const now = new Date();
-                      for (let i = days-1; i >= 0; i--) {
-                        const d = new Date(now);
-                        d.setDate(d.getDate() - i);
-                        labels.push(d.toLocaleDateString("en-PH",{month:"short",day:"numeric"}));
-                        data.push(Math.floor(Math.random() * 80 + 20));
-                      }
+                      const labels = {stats["chart_labels"]};
+                      const data = {stats["chart_data"]};
                       // Simple animated bar chart
                       const W = canvas.offsetWidth || 600;
                       const H = 220;

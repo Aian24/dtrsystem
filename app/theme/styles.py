@@ -139,6 +139,9 @@ html, body, #q-app, .q-layout, .q-page-container, .q-page, .nicegui-content, .q-
   flex-shrink: 0; box-shadow: 0 4px 12px rgba(37,99,235,.35);
 }
 .sidebar-nav { flex:1; padding: 12px 10px; overflow-y: auto; overflow-x: hidden; }
+.sidebar-nav::-webkit-scrollbar { width: 4px; }
+.sidebar-nav::-webkit-scrollbar-track { background: transparent; }
+.sidebar-nav::-webkit-scrollbar-thumb { background-color: var(--border); border-radius: 4px; }
 .sidebar-footer { padding: 12px 10px; border-top: 1px solid var(--border); flex-shrink: 0; overflow-x: hidden; }
 .nav-section-label {
   font-size: 10px; font-weight: 600; text-transform: uppercase;
