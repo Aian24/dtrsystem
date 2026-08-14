@@ -285,6 +285,7 @@ def upload_page():
                                 while success_modal.value:
                                     await asyncio.sleep(0.1)
                                     
+                                upload.reset()
                                 history_table.refresh()
 
                         with ui.element("div").classes("upload-wrapper"):
