@@ -138,14 +138,14 @@ html, body, #q-app, .q-layout, .q-page-container, .q-page, .nicegui-content, .q-
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0; box-shadow: 0 4px 12px rgba(37,99,235,.35);
 }
-.sidebar-nav { flex:1; padding: 12px 10px; overflow-y: auto; overflow-x: hidden; }
+.sidebar-nav { flex:1; padding: 12px 0; overflow-y: auto; overflow-x: hidden; }
 .sidebar-nav::-webkit-scrollbar { width: 4px; }
 .sidebar-nav::-webkit-scrollbar-track { background: transparent; }
 .sidebar-nav::-webkit-scrollbar-thumb { background-color: var(--border); border-radius: 4px; }
 .sidebar-footer { padding: 12px 10px; border-top: 1px solid var(--border); flex-shrink: 0; overflow-x: hidden; }
 .nav-section-label {
   font-size: 10px; font-weight: 600; text-transform: uppercase;
-  letter-spacing: .8px; color: var(--text-muted); padding: 10px 8px 4px;
+  letter-spacing: .8px; color: var(--text-muted); padding: 10px 18px 4px;
   white-space: nowrap;
 }
 .nav-item {
@@ -153,9 +153,9 @@ html, body, #q-app, .q-layout, .q-page-container, .q-page, .nicegui-content, .q-
   padding: 10px 12px; border-radius: var(--radius);
   cursor: pointer; transition: background var(--transition),color var(--transition);
   color: var(--text-secondary); text-decoration: none !important;
-  position: relative; margin-bottom: 2px;
+  position: relative; margin: 0 10px 2px 10px;
   border-left: 3px solid transparent;
-  width: 100%; box-sizing: border-box;
+  width: calc(100% - 20px); box-sizing: border-box;
 }
 .nav-item:hover { background: var(--bg-subtle); color: var(--text-primary); }
 .nav-item.active {
