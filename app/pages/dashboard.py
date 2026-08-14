@@ -100,18 +100,18 @@ def dashboard_page():
                     <canvas id="attendanceChart" style="width:100%;height:220px;"></canvas>
                     ''')
 
-                    js_code = f'''
+                    js_code = '''
                       const canvas = document.getElementById("attendanceChart");
                       if (!canvas) return;
                       const ctx = canvas.getContext("2d");
-                      const labels = {stats["chart_labels"]};
-                      const data = {stats["chart_data"]};
+                      const labels = __LABELS__;
+                      const data = __DATA__;
                       // Simple animated bar chart
                       const W = canvas.offsetWidth || 600;
                       const H = 220;
                       canvas.width = W;
                       canvas.height = H;
-                      const barW = (W - 60) / days - 6;
+                      const barW = (W - 60) / labels.length - 6;
                       const maxVal = Math.max(...data);
                       let progress = 0;
                       function draw(p) {
@@ -148,7 +148,8 @@ def dashboard_page():
                         if (progress < 100) requestAnimationFrame(animate);
                       }
                       requestAnimationFrame(animate);
-                    '''
+                    '''.replace('__LABELS__', stats["chart_labels"]).replace('__DATA__', stats["chart_data"])
+
                     ui.timer(0.2, lambda: ui.run_javascript(js_code), once=True)
 
             # Company Distribution
