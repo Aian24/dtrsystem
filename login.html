@@ -1,0 +1,249 @@
+<!doctype html>
+<html dir="ltr">
+  <head>
+    <title>DTR Management System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      id="nicegui-color-scheme"
+      name="color-scheme"
+      content="light"
+    />
+    <link href="data:image/svg+xml,%0A%20%20%20%20%20%20%20%20%3Csvg%20viewBox%3D%220%200%20128%20128%22%20width%3D%22128%22%20height%3D%22128%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20%3E%0A%20%20%20%20%20%20%20%20%20%20%20%20%3Cstyle%3E%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%40supports%20%28-moz-appearance%3Anone%29%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20text%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20font-size%3A%20100px%3B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20transform%3A%20translateY%280.1em%29%3B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20text%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20font-family%3A%20Arial%2C%20sans-serif%3B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%3C/style%3E%0A%20%20%20%20%20%20%20%20%20%20%20%20%3Ctext%20y%3D%22.9em%22%20font-size%3D%22128%22%20font-family%3D%22Georgia%2C%20sans-serif%22%3E%F0%9F%93%8B%3C/text%3E%0A%20%20%20%20%20%20%20%20%3C/svg%3E%0A%20%20%20%20" rel="shortcut icon" />
+    <style>
+      @layer theme, base, quasar, nicegui, components, utilities, overrides, quasar_importants;
+      @import url("/_nicegui/3.15.0/static/fonts.css") layer(base);
+      
+        @import url("/_nicegui/3.15.0/static/quasar.unimportant.prod.css") layer(quasar);
+        @import url("/_nicegui/3.15.0/static/quasar.important.prod.css") layer(quasar_importants);
+      
+      @import url("/_nicegui/3.15.0/static/nicegui.css") layer(nicegui);
+      @layer quasar {
+        blockquote, dd, dl, figure, h1, h2, h3, h4, h5, h6, hr, p, pre {
+          margin: revert-layer; /* HACK: revert Quasar's margin styles */
+        }
+        /* DEPRECATED: mirror of quasarframework/quasar#18413 + #18419, remove with the Quasar bump for NiceGUI 4.0 */
+        [dir="rtl"] .q-fab__actions--right {
+          transform-origin: 0 50%;
+          right: auto;
+          margin-right: 0;
+          left: 100%;
+          margin-left: 9px;
+          flex-direction: row-reverse;
+        }
+        [dir="rtl"] .q-fab__actions--right:not(.q-fab__actions--opened) {
+          transform: scale(0.4) translateX(-62px);
+        }
+        [dir="rtl"] .q-fab__actions--left {
+          transform-origin: 100% 50%;
+          left: auto;
+          margin-left: 0;
+          right: 100%;
+          margin-right: 9px;
+          flex-direction: row;
+        }
+        [dir="rtl"] .q-fab__actions--left:not(.q-fab__actions--opened) {
+          transform: scale(0.4) translateX(62px);
+        }
+      }
+      @layer overrides {
+        .rotate-45, .rotate-90, .rotate-135, .rotate-180, .rotate-225, .rotate-270, .rotate-315 {
+  rotate: 0deg;
+}
+        .column.inline, .flex.inline, .row.inline {
+          display: inline-flex;  /* HACK: re-apply Quasar's inline styles to override Tailwind */
+        }
+        .nicegui-dialog-open,
+        .nicegui-select-popup-open,
+        .nicegui-table-fullscreen {
+          scroll-behavior: auto !important; /* HACK: avoid smooth-scrolling when dialogs or select popups close */
+        }
+      }
+    </style>
+    <script type="importmap">
+      {"imports": {"vue":"/_nicegui/3.15.0/static/vue.esm-browser.prod.js","sass":"/_nicegui/3.15.0/static/sass.default.js","immutable":"/_nicegui/3.15.0/static/immutable.es.js","dompurify":"/_nicegui/3.15.0/static/dompurify.mjs","nicegui-mermaid":"/_nicegui/3.15.0/esm/68ca9724fef99b9429788be117fa0b5f/index.js","nicegui-mermaid/":"/_nicegui/3.15.0/esm/68ca9724fef99b9429788be117fa0b5f/","nicegui-leaflet":"/_nicegui/3.15.0/esm/8635ba2b8a329f869d8f92314a8456ff/index.js","nicegui-leaflet/":"/_nicegui/3.15.0/esm/8635ba2b8a329f869d8f92314a8456ff/","nicegui-codemirror":"/_nicegui/3.15.0/esm/d1d5814b2c9a8ca923e38d9b8a322588/index.js","nicegui-codemirror/":"/_nicegui/3.15.0/esm/d1d5814b2c9a8ca923e38d9b8a322588/","nicegui-joystick":"/_nicegui/3.15.0/esm/e4cb14ef15fa004d3b2415d75bda879c/index.js","nicegui-joystick/":"/_nicegui/3.15.0/esm/e4cb14ef15fa004d3b2415d75bda879c/","nicegui-echart":"/_nicegui/3.15.0/esm/1acdea657168f2f877a77162b375bae3/index.js","nicegui-echart/":"/_nicegui/3.15.0/esm/1acdea657168f2f877a77162b375bae3/","nicegui-xterm":"/_nicegui/3.15.0/esm/91a1885552e7a5e675fde2f1afb05e9f/index.js","nicegui-xterm/":"/_nicegui/3.15.0/esm/91a1885552e7a5e675fde2f1afb05e9f/","nicegui-aggrid":"/_nicegui/3.15.0/esm/b53e1942483bbfbcce725ba04cd7c55e/index.js","nicegui-aggrid/":"/_nicegui/3.15.0/esm/b53e1942483bbfbcce725ba04cd7c55e/","nicegui-plotly":"/_nicegui/3.15.0/esm/6ec7080bdab9d296377fa55e1b17ef04/index.js","nicegui-plotly/":"/_nicegui/3.15.0/esm/6ec7080bdab9d296377fa55e1b17ef04/","nicegui-scene":"/_nicegui/3.15.0/esm/a9c416e922582807e450e55ab5349ea6/index.js","nicegui-scene/":"/_nicegui/3.15.0/esm/a9c416e922582807e450e55ab5349ea6/","nicegui-json-editor":"/_nicegui/3.15.0/esm/577778cd6a82168ad27f0fac4cf5cb36/index.js","nicegui-json-editor/":"/_nicegui/3.15.0/esm/577778cd6a82168ad27f0fac4cf5cb36/"}}
+    </script>
+    <script>
+      addStyle = (c) => document.head.append(Object.assign(document.createElement("style"), { textContent: c }));
+    </script>
+    
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons+Round">
+
+<script>addStyle("\n/* ═══════════════════════════════════════════════\n   CSS TOKENS\n═══════════════════════════════════════════════ */\n:root {\n  --color-primary:       #2563EB;\n  --color-primary-light: #3B82F6;\n  --color-primary-dark:  #1D4ED8;\n  --color-secondary:     #6366F1;\n  --color-success:       #10B981;\n  --color-warning:       #F59E0B;\n  --color-danger:        #EF4444;\n  --color-info:          #06B6D4;\n  --bg:         #F8FAFC;\n  --bg-surface: #FFFFFF;\n  --bg-subtle:  #F1F5F9;\n  --border:     #E2E8F0;\n  --text-primary:   #0F172A;\n  --text-secondary: #64748B;\n  --text-muted:     #94A3B8;\n  --radius-sm: 6px;\n  --radius:    12px;\n  --radius-lg: 16px;\n  --radius-xl: 24px;\n  --shadow-sm: 0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);\n  --shadow:    0 4px 6px -1px rgba(0,0,0,.07),0 2px 4px -1px rgba(0,0,0,.04);\n  --shadow-md: 0 10px 15px -3px rgba(0,0,0,.08),0 4px 6px -2px rgba(0,0,0,.04);\n  --shadow-lg: 0 20px 25px -5px rgba(0,0,0,.10),0 10px 10px -5px rgba(0,0,0,.04);\n  --shadow-xl: 0 25px 50px -12px rgba(0,0,0,.18);\n  --transition:      .2s cubic-bezier(.4,0,.2,1);\n  --transition-slow: .35s cubic-bezier(.4,0,.2,1);\n}\n\nbody.dark-mode {\n  --bg:         #0F172A;\n  --bg-surface: #1E293B;\n  --bg-subtle:  #0F172A;\n  --border:     #334155;\n  --text-primary:   #F1F5F9;\n  --text-secondary: #94A3B8;\n  --text-muted:     #64748B;\n}\n\n/* ═══════════════════════════════════════════════\n   BASE RESET\n═══════════════════════════════════════════════ */\n*, *::before, *::after { box-sizing: border-box; }\nhtml, body {\n  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;\n  font-size: 14px; line-height: 1.6;\n  color: var(--text-primary); background: var(--bg);\n  -webkit-font-smoothing: antialiased;\n  height: 100%; margin: 0; padding: 0;\n}\n\n/* ═══════════════════════════════════════════════\n   NICEGUI / QUASAR OVERRIDES\n═══════════════════════════════════════════════ */\n.q-page { padding: 0 !important; min-height: 0 !important; background: var(--bg) !important; }\n.nicegui-content { padding: 0 !important; flex: 1 !important; min-height: 0 !important; max-width: 100% !important; width: 100% !important; }\n\n.q-header {\n  background: var(--bg-surface) !important;\n  color: var(--text-primary) !important;\n  border-bottom: 1px solid var(--border) !important;\n  box-shadow: none !important;\n  transition: background var(--transition-slow), border-color var(--transition-slow) !important;\n}\n.q-drawer {\n  background: var(--bg-surface) !important;\n  border-right: 1px solid var(--border) !important;\n  transition: background var(--transition-slow) !important;\n}\n.q-drawer .q-scrollarea, .q-drawer .q-scrollarea__content { width: 100% !important; }\n\n/* ═══════════════════════════════════════════════\n   SCROLLBAR\n═══════════════════════════════════════════════ */\n::-webkit-scrollbar { width: 5px; height: 5px; }\n::-webkit-scrollbar-track { background: transparent; }\n::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }\n::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }\n\n/* ═══════════════════════════════════════════════\n   TOPBAR (inside ui.header)\n═══════════════════════════════════════════════ */\n.topbar {\n  display: flex; align-items: center;\n  padding: 0 24px; gap: 16px;\n  height: 64px; width: 100%;\n  background: transparent;\n}\n.topbar-breadcrumb {\n  flex: 1; display: flex; align-items: center;\n  gap: 6px; color: var(--text-secondary); font-size: 13px;\n}\n.topbar-breadcrumb .crumb-active { color: var(--text-primary); font-weight: 600; }\n.topbar-actions { display: flex; align-items: center; gap: 10px; }\n\n.clock-display {\n  font-size: 13px; font-weight: 500;\n  color: var(--text-secondary); padding: 6px 12px;\n  background: var(--bg-subtle); border-radius: var(--radius);\n  font-variant-numeric: tabular-nums;\n}\n.icon-btn {\n  width: 36px; height: 36px; border-radius: var(--radius);\n  display: flex; align-items: center; justify-content: center;\n  cursor: pointer; color: var(--text-secondary);\n  transition: background var(--transition), color var(--transition);\n  border: none; background: transparent;\n}\n.icon-btn:hover { background: var(--bg-subtle); color: var(--text-primary); }\n\n/* ═══════════════════════════════════════════════\n   SIDEBAR NAV (inside ui.left_drawer)\n═══════════════════════════════════════════════ */\n.sidebar-logo {\n  padding: 14px 18px; display: flex; align-items: center;\n  gap: 10px; border-bottom: 1px solid var(--border);\n  height: 64px; flex-shrink: 0;\n}\n.sidebar-logo-icon {\n  width: 36px; height: 36px;\n  background: linear-gradient(135deg,var(--color-primary),var(--color-secondary));\n  border-radius: var(--radius-sm);\n  display: flex; align-items: center; justify-content: center;\n  flex-shrink: 0; box-shadow: 0 4px 12px rgba(37,99,235,.35);\n}\n.sidebar-nav { flex:1; padding: 12px 10px; overflow-y: auto; }\n.nav-section-label {\n  font-size: 10px; font-weight: 600; text-transform: uppercase;\n  letter-spacing: .8px; color: var(--text-muted); padding: 10px 8px 4px;\n  white-space: nowrap;\n}\n.nav-item {\n  display: flex; align-items: center; gap: 10px;\n  padding: 10px 12px; border-radius: var(--radius);\n  cursor: pointer; transition: background var(--transition),color var(--transition);\n  color: var(--text-secondary); text-decoration: none !important;\n  position: relative; margin-bottom: 2px;\n  border-left: 3px solid transparent;\n}\n.nav-item:hover { background: var(--bg-subtle); color: var(--text-primary); }\n.nav-item.active {\n  background: rgba(37,99,235,.1); color: var(--color-primary) !important;\n  font-weight: 600; border-left-color: var(--color-primary);\n}\n.nav-item .material-icons-round { font-size: 20px; flex-shrink: 0; }\n.nav-label { font-size: 13.5px; font-weight: 500; }\n.sidebar-footer { padding: 12px 10px; border-top: 1px solid var(--border); }\n.separator { height: 1px; background: var(--border); margin: 8px 0; }\n\n/* ═══════════════════════════════════════════════\n   PAGE AREA\n═══════════════════════════════════════════════ */\n.page-area { padding: 28px; background: var(--bg); min-height: 100%; transition: background var(--transition-slow); }\n.page-header { margin-bottom: 24px; }\n.page-title { font-size: 24px; font-weight: 700; color: var(--text-primary); letter-spacing: -.4px; }\n.page-subtitle { font-size: 13.5px; color: var(--text-secondary); margin-top: 4px; }\n\n@keyframes fadeInUp {\n  from { opacity: 0; transform: translateY(16px); }\n  to   { opacity: 1; transform: translateY(0); }\n}\n.page-fade-in { animation: fadeInUp .35s ease both; }\n\n/* ═══════════════════════════════════════════════\n   STAT CARDS\n═══════════════════════════════════════════════ */\n.stat-card {\n  background: var(--bg-surface); border-radius: var(--radius-lg);\n  padding: 22px 24px; border: 1px solid var(--border);\n  box-shadow: var(--shadow-sm); overflow: hidden; position: relative;\n  transition: transform var(--transition),box-shadow var(--transition),border-color var(--transition);\n  animation: fadeInUp .4s ease both;\n}\n.stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: rgba(37,99,235,.2); }\n.stat-card-gradient { position: absolute; top: -30px; right: -30px; width: 120px; height: 120px; border-radius: 50%; opacity: .08; }\n.stat-icon { width: 44px; height: 44px; border-radius: var(--radius); display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }\n.stat-icon .material-icons-round { font-size: 22px; color: #fff; }\n.stat-value { font-size: 28px; font-weight: 800; letter-spacing: -1px; color: var(--text-primary); font-variant-numeric: tabular-nums; }\n.stat-label { font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: .6px; color: var(--text-muted); margin-top: 2px; }\n.stat-trend { display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 500; margin-top: 8px; }\n\n/* ═══════════════════════════════════════════════\n   CARDS\n═══════════════════════════════════════════════ */\n.card { background: var(--bg-surface); border-radius: var(--radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-sm); transition: background var(--transition-slow),border-color var(--transition-slow); }\n.card-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 22px; border-bottom: 1px solid var(--border); }\n.card-title { font-size: 15px; font-weight: 600; color: var(--text-primary); }\n.card-body { padding: 22px; }\n\n/* ═══════════════════════════════════════════════\n   BUTTONS\n═══════════════════════════════════════════════ */\n.btn {\n  display: inline-flex; align-items: center; gap: 7px;\n  padding: 9px 18px; border-radius: var(--radius);\n  font-size: 13.5px; font-weight: 600; font-family: inherit;\n  cursor: pointer; border: none;\n  transition: all var(--transition);\n  position: relative; overflow: hidden; outline: none; text-decoration: none;\n}\n.btn::after { content: ''; position: absolute; inset: 0; background: radial-gradient(circle,rgba(255,255,255,.3) 0%,transparent 60%); opacity: 0; transition: opacity .15s; }\n.btn:active::after { opacity: 1; }\n.btn-primary { background: linear-gradient(135deg,var(--color-primary),var(--color-primary-light)); color: #fff; box-shadow: 0 4px 14px rgba(37,99,235,.3); }\n.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(37,99,235,.4); }\n.btn-secondary { background: var(--bg-subtle); color: var(--text-primary); border: 1px solid var(--border); }\n.btn-secondary:hover { background: var(--border); }\n.btn-success { background: linear-gradient(135deg,var(--color-success),#059669); color: #fff; box-shadow: 0 4px 14px rgba(16,185,129,.3); }\n.btn-danger  { background: linear-gradient(135deg,var(--color-danger),#DC2626); color: #fff; box-shadow: 0 4px 14px rgba(239,68,68,.3); }\n.btn-sm  { padding: 6px 12px; font-size: 12.5px; }\n.btn-lg  { padding: 12px 24px; font-size: 15px; }\n.btn:disabled { opacity: .5; cursor: not-allowed; transform: none !important; }\n\n/* ═══════════════════════════════════════════════\n   BADGES\n═══════════════════════════════════════════════ */\n.badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 99px; font-size: 11.5px; font-weight: 600; }\n.badge-success { background: rgba(16,185,129,.12); color: #059669; }\n.badge-danger  { background: rgba(239,68,68,.12);  color: #DC2626; }\n.badge-warning { background: rgba(245,158,11,.12); color: #D97706; }\n.badge-info    { background: rgba(37,99,235,.1);   color: var(--color-primary); }\n.badge-gray    { background: var(--bg-subtle);     color: var(--text-secondary); }\n\n/* ═══════════════════════════════════════════════\n   FORM ELEMENTS\n═══════════════════════════════════════════════ */\n.form-label { display: block; font-size: 12.5px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .5px; }\n.form-control { width: 100%; padding: 9px 13px; border: 1.5px solid var(--border); border-radius: var(--radius); background: var(--bg-surface); color: var(--text-primary); font-family: inherit; font-size: 14px; transition: border-color var(--transition),box-shadow var(--transition); outline: none; }\n.form-control:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(37,99,235,.12); }\n.form-control::placeholder { color: var(--text-muted); }\n\n/* ═══════════════════════════════════════════════\n   TABLES\n═══════════════════════════════════════════════ */\n.data-table-wrapper { width: 100%; overflow-x: auto; border-radius: var(--radius-lg); border: 1px solid var(--border); background: var(--bg-surface); }\n.data-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }\n.data-table thead th { padding: 12px 16px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--text-muted); background: var(--bg-subtle); border-bottom: 1px solid var(--border); white-space: nowrap; cursor: pointer; user-select: none; }\n.data-table thead th:hover { color: var(--text-primary); }\n.data-table tbody tr { border-bottom: 1px solid var(--border); transition: background var(--transition); animation: tableRowFadeIn .25s ease both; }\n.data-table tbody tr:last-child { border-bottom: none; }\n.data-table tbody tr:hover { background: var(--bg-subtle); }\n.data-table td { padding: 12px 16px; color: var(--text-primary); vertical-align: middle; }\n@keyframes tableRowFadeIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: translateX(0); } }\n\n/* ═══════════════════════════════════════════════\n   MODAL\n═══════════════════════════════════════════════ */\n.modal-box {\n  background: var(--bg-surface); border-radius: var(--radius-xl);\n  box-shadow: var(--shadow-xl); max-width: 560px;\n  width: calc(100% - 48px);\n  animation: scaleIn .25s cubic-bezier(.34,1.56,.64,1);\n  border: 1px solid var(--border);\n}\n@keyframes scaleIn { from { opacity: 0; transform: scale(.92) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }\n.modal-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid var(--border); }\n.modal-title { font-size: 17px; font-weight: 700; color: var(--text-primary); }\n.modal-body { padding: 24px; }\n.modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 24px; border-top: 1px solid var(--border); }\n\n/* ═══════════════════════════════════════════════\n   TOAST\n═══════════════════════════════════════════════ */\n#toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }\n.toast { display: flex; align-items: flex-start; gap: 12px; padding: 14px 18px; border-radius: var(--radius-lg); background: var(--bg-surface); box-shadow: var(--shadow-xl); border: 1px solid var(--border); min-width: 300px; max-width: 400px; pointer-events: auto; animation: toastSlideIn .3s cubic-bezier(.34,1.56,.64,1); position: relative; }\n.toast.hiding { animation: toastSlideOut .25s ease forwards; }\n@keyframes toastSlideIn { from { opacity: 0; transform: translateX(60px) scale(.9); } to { opacity: 1; transform: translateX(0) scale(1); } }\n@keyframes toastSlideOut { from { opacity: 1; transform: translateX(0); max-height: 100px; } to { opacity: 0; transform: translateX(60px); max-height: 0; padding: 0; margin: 0; } }\n.toast-icon { width: 32px; height: 32px; border-radius: var(--radius); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }\n.toast-icon .material-icons-round { font-size: 18px; color: #fff; }\n.toast-success .toast-icon { background: var(--color-success); }\n.toast-error   .toast-icon { background: var(--color-danger); }\n.toast-warning .toast-icon { background: var(--color-warning); }\n.toast-info    .toast-icon { background: var(--color-info); }\n.toast-content { flex: 1; }\n.toast-title   { font-size: 13.5px; font-weight: 700; color: var(--text-primary); }\n.toast-message { font-size: 12.5px; color: var(--text-secondary); margin-top: 2px; }\n.toast-progress { position: absolute; bottom: 0; left: 0; height: 3px; border-radius: 0 0 var(--radius-lg) var(--radius-lg); animation: toastProgress linear forwards; }\n.toast-success .toast-progress { background: var(--color-success); }\n.toast-error   .toast-progress { background: var(--color-danger); }\n@keyframes toastProgress { from { width: 100%; } to { width: 0%; } }\n\n/* ═══════════════════════════════════════════════\n   UPLOAD AREA\n═══════════════════════════════════════════════ */\n.upload-zone { border: 2px dashed var(--border); border-radius: var(--radius-xl); padding: 60px 40px; text-align: center; cursor: pointer; transition: all var(--transition); background: var(--bg-subtle); }\n.upload-zone:hover, .upload-zone.dragover { border-color: var(--color-primary); background: rgba(37,99,235,.04); transform: scale(1.005); }\n.upload-icon { width: 64px; height: 64px; background: linear-gradient(135deg,rgba(37,99,235,.1),rgba(99,102,241,.1)); border-radius: var(--radius-xl); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; transition: transform var(--transition); }\n.upload-zone:hover .upload-icon { transform: scale(1.08); }\n.upload-icon .material-icons-round { font-size: 32px; color: var(--color-primary); }\n\n/* ═══════════════════════════════════════════════\n   PROGRESS BAR\n═══════════════════════════════════════════════ */\n.progress-bar-wrapper { background: var(--bg-subtle); border-radius: 99px; height: 8px; overflow: hidden; }\n.progress-bar-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg,var(--color-primary),var(--color-secondary)); transition: width .4s ease; position: relative; overflow: hidden; }\n.progress-bar-fill::after { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent); animation: shimmer 1.5s infinite; }\n@keyframes shimmer { to { left: 100%; } }\n\n/* ═══════════════════════════════════════════════\n   LOGIN PAGE — position:fixed covers full screen\n═══════════════════════════════════════════════ */\n.login-bg {\n  position: fixed !important; top: 0; left: 0; right: 0; bottom: 0;\n  background: linear-gradient(135deg, #0B1221 0%, #1a2744 50%, #0B1221 100%);\n  display: flex !important; align-items: center !important; justify-content: center !important;\n  z-index: 9000; overflow: hidden;\n}\n.login-orb { position: absolute; border-radius: 50%; filter: blur(80px); opacity: .18; animation: orb 8s ease-in-out infinite alternate; pointer-events: none; }\n.login-orb-1 { width: 600px; height: 600px; background: #2563EB; top: -200px; right: -100px; }\n.login-orb-2 { width: 400px; height: 400px; background: #6366F1; bottom: -100px; left: -50px; animation-delay: -4s; }\n@keyframes orb { from { transform: scale(1) translate(0,0); } to { transform: scale(1.1) translate(20px,20px); } }\n.login-card {\n  position: relative; z-index: 1;\n  background: rgba(15,28,54,.85);\n  backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);\n  border: 1px solid rgba(255,255,255,.1);\n  border-radius: 24px; padding: 48px 44px; width: 420px;\n  box-shadow: 0 25px 50px -12px rgba(0,0,0,.6);\n  animation: fadeInUp .5s ease;\n}\n.login-card .q-field__control { background: rgba(255,255,255,.07) !important; border-radius: 10px !important; }\n.login-card .q-field__native, .login-card .q-field__label { color: #F1F5F9 !important; }\n.login-card .q-field--outlined .q-field__control:before { border-color: rgba(255,255,255,.15) !important; }\n.login-card .q-field--focused .q-field__control:before { border-color: #3B82F6 !important; }\n.login-card .q-field__marginal { color: #94A3B8 !important; }\n\n/* ═══════════════════════════════════════════════\n   DTR PREVIEW\n═══════════════════════════════════════════════ */\n.dtr-preview-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }\n.dtr-preview-table th, .dtr-preview-table td { border: 1px solid #CBD5E1; padding: 7px 10px; text-align: center; }\n.dtr-preview-table th { background: #F1F5F9; font-weight: 700; font-size: 11px; text-transform: uppercase; }\n.dtr-preview-table tr:hover td { background: #F8FAFC; }\n@media print { .q-drawer,.q-header,.no-print { display: none !important; } .q-page-container { padding-left: 0 !important; } }\n\n/* ═══════════════════════════════════════════════\n   EMPTY STATE\n═══════════════════════════════════════════════ */\n.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; color: var(--text-muted); text-align: center; }\n.empty-state .material-icons-round { font-size: 56px; margin-bottom: 16px; opacity: .4; }\n.empty-state-title { font-size: 15px; font-weight: 600; color: var(--text-secondary); }\n.empty-state-desc  { font-size: 13px; color: var(--text-muted); margin-top: 4px; }\n\n/* ═══════════════════════════════════════════════\n   PAGINATION\n═══════════════════════════════════════════════ */\n.pagination { display: flex; align-items: center; gap: 4px; padding: 14px 16px; border-top: 1px solid var(--border); }\n.page-btn { width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius); border: 1px solid var(--border); background: var(--bg-surface); color: var(--text-secondary); font-size: 13px; font-weight: 500; cursor: pointer; transition: all var(--transition); }\n.page-btn:hover  { background: var(--bg-subtle); color: var(--text-primary); }\n.page-btn.active { background: var(--color-primary); border-color: var(--color-primary); color: #fff; box-shadow: 0 2px 8px rgba(37,99,235,.3); }\n.page-btn:disabled { opacity: .4; cursor: not-allowed; }\n\n/* ═══════════════════════════════════════════════\n   UTILITIES\n═══════════════════════════════════════════════ */\n.text-primary { color: var(--color-primary) !important; }\n.text-success { color: var(--color-success) !important; }\n.text-danger  { color: var(--color-danger)  !important; }\n.text-warning { color: var(--color-warning) !important; }\n.text-muted   { color: var(--text-muted)    !important; }\n.flex    { display: flex; }\n.flex-1  { flex: 1; }\n.items-center { align-items: center; }\n.justify-between { justify-content: space-between; }\n.gap-2  { gap: 8px; }\n.gap-3  { gap: 12px; }\n.gap-4  { gap: 16px; }\n.grid-cols-2 { display: grid; grid-template-columns: repeat(2,1fr); gap: 16px; }\n.grid-cols-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }\n.grid-cols-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; }\n.mt-2 { margin-top: 8px; }\n.mt-4 { margin-top: 16px; }\n.mb-4 { margin-bottom: 16px; }\n.w-full { width: 100%; }\n\n");</script>
+
+    <!-- prevent Prettier from removing this line -->
+    
+    <link rel="modulepreload" href="/_nicegui/3.15.0/static/vue.esm-browser.prod.js" />
+    
+    <link rel="modulepreload" href="/_nicegui/3.15.0/components/9fa5faa580aadd597a0bf5b990608ce5/html.js" />
+    
+    <link rel="modulepreload" href="/_nicegui/3.15.0/components/4b97f4011ee8d7c09cae4bcf175aa64e/input.js" />
+    
+    <!-- prevent Prettier from removing this line -->
+    
+    <style type="text/tailwindcss">
+      @custom-variant dark (&:where(body.body--dark, body.body--dark *));
+    </style>
+    
+    <!-- prevent Prettier from removing this line -->
+    
+  </head>
+  <body>
+    <script defer src="/_nicegui/3.15.0/static/socket.io.min.js"></script>
+    
+    <script defer src="/_nicegui/3.15.0/static/tailwindcss.min.js"></script>
+    
+    <script type="module">
+      import * as Vue from "vue";
+      globalThis.Vue = Vue;
+      document.getElementById("esm-fallback")?.remove();
+    </script>
+    
+    <script defer src="/_nicegui/3.15.0/static/quasar.umd.prod.js"></script>
+    
+    <script defer src="/_nicegui/3.15.0/static/nicegui.js"></script>
+
+    <script defer src="/_nicegui/3.15.0/static/lang/en-US.umd.prod.js"></script>
+    <style></style>
+<script>
+window.DTR = window.DTR || {};
+
+DTR.showToast = function(type, title, message, duration) {
+  duration = duration || 4000;
+  var container = document.getElementById('toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toast-container';
+    document.body.appendChild(container);
+  }
+  var icons = { success: 'check_circle', error: 'error', warning: 'warning', info: 'info' };
+  var toast = document.createElement('div');
+  toast.className = 'toast toast-' + type;
+  toast.innerHTML =
+    '<div class="toast-icon"><span class="material-icons-round">' + (icons[type]||'info') + '</span></div>' +
+    '<div class="toast-content">' +
+      '<div class="toast-title">' + title + '</div>' +
+      (message ? '<div class="toast-message">' + message + '</div>' : '') +
+    '</div>' +
+    '<button onclick="this.parentElement.remove()" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:20px;padding:0 0 0 8px;line-height:1;flex-shrink:0;">&times;</button>' +
+    '<div class="toast-progress" style="animation-duration:' + duration + 'ms;"></div>';
+  container.appendChild(toast);
+  setTimeout(function() {
+    toast.classList.add('hiding');
+    setTimeout(function() { toast.remove(); }, 300);
+  }, duration);
+};
+
+DTR.animateCounter = function(el, target, duration) {
+  if (!el) return;
+  duration = duration || 1200;
+  el._startTime = null;
+  var step = function(timestamp) {
+    if (!el._startTime) el._startTime = timestamp;
+    var progress = Math.min((timestamp - el._startTime) / duration, 1);
+    var eased = 1 - Math.pow(1 - progress, 3);
+    el.textContent = Math.floor(eased * target).toLocaleString();
+    if (progress < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+};
+
+DTR.toggleDarkMode = function() {
+  document.body.classList.toggle('dark-mode');
+  localStorage.setItem('dtr_dark', document.body.classList.contains('dark-mode') ? '1' : '');
+};
+
+if (localStorage.getItem('dtr_dark')) {
+  document.body.classList.add('dark-mode');
+}
+
+DTR.startClock = function(el) {
+  if (!el) return;
+  var update = function() {
+    el.textContent = new Date().toLocaleTimeString('en-PH', {hour12:true, hour:'2-digit', minute:'2-digit', second:'2-digit'});
+  };
+  update();
+  setInterval(update, 1000);
+};
+
+</script>
+
+
+
+    <style>
+      #esm-fallback {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        height: 100vh;
+        font-family: sans-serif;
+        color: #888;
+        opacity: 0;
+        animation: esm-fallback-reveal 0s 1s forwards;
+      }
+      @keyframes esm-fallback-reveal {
+        to {
+          opacity: 1;
+        }
+      }
+      #esm-fallback ~ * {
+        display: none;
+      }
+    </style>
+    <div id="esm-fallback">Your browser does not support ES modules.<br />Please use a modern browser.</div>
+    <div id="app" ></div>
+    <div id="nicegui-keep-alive-cache" style="display: none" aria-hidden="true"></div>
+    <div id="popup" class="nicegui-error-popup" aria-hidden="true">
+      <span>Connection lost.</span>
+      <span>Trying to reconnect...</span>
+    </div>
+    <div id="too_long_message_popup" class="nicegui-error-popup" aria-hidden="true">
+      <span>Message too long</span>
+      <span>The message is too large for WebSocket transmission.</span>
+    </div>
+    <script type="module">
+      // Load DOMPurify for HTML sanitization
+      // NOTE: Always use DOMPurify instead of native setHTML because native setHTML strips class attributes.
+      import DOMPurify from "dompurify";
+      Element.prototype.setHTML = function (html) {
+        this.innerHTML = DOMPurify.sanitize(html);
+      };
+
+      const app = createApp(parseElements(String.raw`{"0":{"tag":"q-layout","class":["nicegui-layout"],"props":{"view":"hhh lpr fff"},"children":[1],"events":[{"listener_id":"05df5f11-5a62-4c51-b283-8070aa2615ce","type":"sub_pages_open","specials":[],"modifiers":[],"keys":[],"args":null,"throttle":0.0,"leading_events":true,"trailing_events":true,"js_handler":null},{"listener_id":"0899b0a5-9735-495c-959a-15d1f6aff75e","type":"sub_pages_navigate","specials":[],"modifiers":[],"keys":[],"args":null,"throttle":0.0,"leading_events":true,"trailing_events":true,"js_handler":null}]},"1":{"tag":"q-page-container","children":[2]},"2":{"tag":"q-page","children":[3]},"3":{"tag":"div","class":["nicegui-content"],"children":[4,5]},"4":{"tag":"nicegui-html","props":{"innerHTML":"\n    &lt;style&gt;\n      body { background: #0F172A !important; }\n      .q-field__control { background: rgba(255,255,255,.06) !important; border-radius: 10px !important; }\n      .q-field__native, .q-field__label { color: #F1F5F9 !important; }\n      .q-field--outlined .q-field__control:before { border-color: rgba(255,255,255,.15) !important; }\n      .q-field--focused .q-field__control:before  { border-color: #3B82F6 !important; }\n    &lt;/style&gt;\n    ","tag":"div","sanitize":true}},"5":{"tag":"div","class":["login-bg"],"children":[6,7]},"6":{"tag":"nicegui-html","props":{"innerHTML":"\n        &lt;div class=\"login-orb login-orb-1\"&gt;&lt;/div&gt;\n        &lt;div class=\"login-orb login-orb-2\"&gt;&lt;/div&gt;\n        ","tag":"div","sanitize":true}},"7":{"tag":"div","class":["login-card"],"children":[8,9,10,12,14]},"8":{"tag":"nicegui-html","props":{"innerHTML":"\n            &lt;div style=\"text-align:center;margin-bottom:32px;\"&gt;\n              &lt;div style=\"width:56px;height:56px;\n                          background:linear-gradient(135deg,#2563EB,#6366F1);\n                          border-radius:14px;\n                          display:flex;align-items:center;justify-content:center;\n                          margin:0 auto 16px;\n                          box-shadow:0 8px 24px rgba(37,99,235,.4);\"&gt;\n                &lt;span class=\"material-icons-round\" style=\"color:#fff;font-size:28px;\"&gt;schedule&lt;/span&gt;\n              &lt;/div&gt;\n              &lt;h1 style=\"font-size:22px;font-weight:800;color:#F1F5F9;letter-spacing:-.4px;margin:0 0 6px;\"&gt;\n                Admin Login\n              &lt;/h1&gt;\n              &lt;p style=\"color:#64748B;font-size:13.5px;margin:0;\"&gt;Sign in to manage the system&lt;/p&gt;\n            &lt;/div&gt;\n            ","tag":"div","sanitize":true}},"9":{"tag":"nicegui-input","style":{"width":"100%","margin-bottom":"14px"},"props":{"value":"","loopback":false,"error":null,"label":"Username","for":"c9","placeholder":"Enter your username","type":"text","_autocomplete":[],"outlined":true,"color":"blue-6"},"events":[{"listener_id":"0087be4a-233f-4908-97b7-81cbb63d9e86","type":"update:value","specials":[],"modifiers":[],"keys":[],"args":[null],"throttle":0,"leading_events":true,"trailing_events":true,"js_handler":null},{"listener_id":"2461734f-3464-47bc-a3e0-ecaf582a6a72","type":"keydown","specials":[],"modifiers":[],"keys":["enter"],"args":null,"throttle":0.0,"leading_events":true,"trailing_events":true,"js_handler":null}]},"10":{"tag":"nicegui-input","style":{"width":"100%","margin-bottom":"24px"},"props":{"value":"","loopback":false,"error":null,"label":"Password","for":"c10","placeholder":"Enter your password","type":"password","_autocomplete":[],"outlined":true,"color":"blue-6"},"slots":{"append":{"ids":[11]}},"events":[{"listener_id":"b856bcd5-1985-4d24-825a-d40fd5b75ca4","type":"update:value","specials":[],"modifiers":[],"keys":[],"args":[null],"throttle":0,"leading_events":true,"trailing_events":true,"js_handler":null},{"listener_id":"16575e2e-269e-419f-8eb8-5311ec8ea5a1","type":"keydown","specials":[],"modifiers":[],"keys":["enter"],"args":null,"throttle":0.0,"leading_events":true,"trailing_events":true,"js_handler":null}]},"11":{"tag":"q-icon","style":{"cursor":"pointer"},"props":{"name":"visibility_off"},"events":[{"listener_id":"f8b1f8f3-f5b6-429d-be0c-097c8007a218","type":"click","specials":[],"modifiers":[],"keys":[],"args":null,"throttle":0.0,"leading_events":true,"trailing_events":true,"js_handler":null}]},"12":{"tag":"div","style":{"width":"100%"},"children":[13]},"13":{"tag":"q-btn","style":{"width":"100%","height":"46px","font-size":"15px","font-weight":"700","border-radius":"10px","letter-spacing":".2px"},"props":{"color":"blue-6","label":"Sign In","unelevated":true},"events":[{"listener_id":"22d2803d-225c-4701-bceb-51cc4f321b81","type":"click","specials":[],"modifiers":[],"keys":[],"args":[],"throttle":0.0,"leading_events":true,"trailing_events":true,"js_handler":null}]},"14":{"tag":"nicegui-html","props":{"innerHTML":"\n            &lt;div style=\"text-align:center;margin-top:24px;\"&gt;\n              &lt;a href=\"/\" style=\"color:#64748B;font-size:12.5px;text-decoration:none;transition:color 0.2s;\"&gt;\n                &amp;larr; Back to Employee Portal\n              &lt;/a&gt;\n            &lt;/div&gt;\n            ","tag":"div","sanitize":true}}}`), {
+        version: "3.15.0",
+        prefix: "",
+        query: {'client_id': '083e0964-4cfd-4088-ba31-3661445938ef', 'next_message_id': 0, 'implicit_handshake': True},
+        extraHeaders: {},
+        transports: ['websocket', 'polling'],
+      });
+      const dark = False;
+      const language = "en-US";
+      const vue_config = {"brand":{"primary":"#5898d4","secondary":"#26a69a","accent":"#9c27b0","dark":"#1d1d1d","dark-page":"#121212","positive":"#21ba45","negative":"#c10015","info":"#31ccec","warning":"#f2c037"},"loadingBar":{"color":"primary","skipHijack":false},"lang":{"noHtmlAttrs":true}};
+      
+        app.use(Quasar, {config: vue_config});
+        applyColors(vue_config.brand);
+        Quasar.lang.set(Quasar.lang[language.replace('-', '')]);
+        darkSetter = (dark) => Quasar.Dark.set(dark === None ? "auto" : dark);
+        setDark(dark);
+    
+
+      import { default as html } from "/_nicegui/3.15.0/components/9fa5faa580aadd597a0bf5b990608ce5/html.js";
+app.component("nicegui-html", html);
+import { default as input } from "/_nicegui/3.15.0/components/4b97f4011ee8d7c09cae4bcf175aa64e/input.js";
+app.component("nicegui-input", input);
+      
+
+      app.mount("#app");
+
+      // Scroll to fragment after Vue mounts (browser's native scroll may have failed if element wasn't ready)
+      if (window.location.hash) {
+        Vue.nextTick(() => {
+          const fragment = window.location.hash.substring(1);
+          (document.getElementById(fragment) || document.querySelector(`a[name="${fragment}"]`))?.scrollIntoView();
+        });
+      }
+    </script>
+  </body>
+</html>

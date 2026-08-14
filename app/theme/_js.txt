@@ -1,0 +1,59 @@
+window.DTR = window.DTR || {};
+
+DTR.showToast = function(type, title, message, duration) {
+  duration = duration || 4000;
+  var container = document.getElementById('toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toast-container';
+    document.body.appendChild(container);
+  }
+  var icons = { success: 'check_circle', error: 'error', warning: 'warning', info: 'info' };
+  var toast = document.createElement('div');
+  toast.className = 'toast toast-' + type;
+  toast.innerHTML =
+    '<div class="toast-icon"><span class="material-icons-round">' + (icons[type]||'info') + '</span></div>' +
+    '<div class="toast-content">' +
+      '<div class="toast-title">' + title + '</div>' +
+      (message ? '<div class="toast-message">' + message + '</div>' : '') +
+    '</div>' +
+    '<button onclick="this.parentElement.remove()" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:20px;padding:0 0 0 8px;line-height:1;flex-shrink:0;">&times;</button>' +
+    '<div class="toast-progress" style="animation-duration:' + duration + 'ms;"></div>';
+  container.appendChild(toast);
+  setTimeout(function() {
+    toast.classList.add('hiding');
+    setTimeout(function() { toast.remove(); }, 300);
+  }, duration);
+};
+
+DTR.animateCounter = function(el, target, duration) {
+  if (!el) return;
+  duration = duration || 1200;
+  el._startTime = null;
+  var step = function(timestamp) {
+    if (!el._startTime) el._startTime = timestamp;
+    var progress = Math.min((timestamp - el._startTime) / duration, 1);
+    var eased = 1 - Math.pow(1 - progress, 3);
+    el.textContent = Math.floor(eased * target).toLocaleString();
+    if (progress < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+};
+
+DTR.toggleDarkMode = function() {
+  document.body.classList.toggle('dark-mode');
+  localStorage.setItem('dtr_dark', document.body.classList.contains('dark-mode') ? '1' : '');
+};
+
+if (localStorage.getItem('dtr_dark')) {
+  document.body.classList.add('dark-mode');
+}
+
+DTR.startClock = function(el) {
+  if (!el) return;
+  var update = function() {
+    el.textContent = new Date().toLocaleTimeString('en-PH', {hour12:true, hour:'2-digit', minute:'2-digit', second:'2-digit'});
+  };
+  update();
+  setInterval(update, 1000);
+};
