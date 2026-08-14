@@ -147,6 +147,18 @@ html, body, #q-app, .q-layout, .q-page-container, .q-page, .nicegui-content, .q-
 .sidebar-nav::-webkit-scrollbar { width: 4px; }
 .sidebar-nav::-webkit-scrollbar-track { background: transparent; }
 .sidebar-nav::-webkit-scrollbar-thumb { background-color: var(--border); }
+
+/* Force Quasar's QScrollArea scrollbars (if present) to look like our custom scrollbar and sit at the edge */
+.q-drawer .q-scrollarea__thumb {
+  width: 4px !important;
+  background-color: var(--border) !important;
+  right: 0 !important;
+  border-radius: 0 !important;
+  opacity: 1 !important;
+}
+.q-drawer .q-scrollarea__bar {
+  display: none !important;
+}
 .sidebar-footer { padding: 12px 10px; border-top: 1px solid var(--border); flex-shrink: 0; overflow-x: hidden; }
 .nav-section-label {
   font-size: 10px; font-weight: 600; text-transform: uppercase;
