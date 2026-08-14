@@ -138,7 +138,8 @@ def open_edit_dialog(emp: dict, on_success):
 
 
 def employees_page():
-    
+    table_state = {"search": "", "page": 1, "limit": 10}
+
     @ui.refreshable
     def history_container():
         emps = _get_employees()
@@ -268,7 +269,37 @@ def employees_page():
                     bulk_actions.style("display: none;")
 
             with ui.element("div").classes("card-body").style("padding: 0; overflow-x: auto;"):
-                if not emps:
+                import math
+                term = table_state["search"].lower()
+                filtered_emps = [e for e in emps if term in e['emp_id'].lower() or term in e['name'].lower() or term in e['department'].lower() or term in e['position'].lower() or term in e['company'].lower()] if term else emps
+                
+                total_items = len(filtered_emps)
+                total_pages = math.ceil(total_items / table_state["limit"]) or 1
+                if table_state["page"] > total_pages:
+                    table_state["page"] = total_pages
+                    
+                start_idx = (table_state["page"] - 1) * table_state["limit"]
+                end_idx = start_idx + table_state["limit"]
+                paged_emps = filtered_emps[start_idx:end_idx]
+
+                with ui.element("div").style("padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); gap: 16px; flex-wrap: wrap;"):
+                    with ui.element("div").style("display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted);"):
+                        ui.html("<span>Show</span>")
+                        def update_limit(e):
+                            table_state["limit"] = e.value
+                            table_state["page"] = 1
+                            history_container.refresh()
+                        ui.select(options=[10, 25, 50, 100], value=table_state["limit"], on_change=update_limit).props('dense outlined').style("width: 70px;")
+                        ui.html("<span>entries</span>")
+                        
+                    with ui.element("div"):
+                        def update_search(e):
+                            table_state["search"] = e.value
+                            table_state["page"] = 1
+                            history_container.refresh()
+                        ui.input(placeholder="Search...", value=table_state["search"], on_change=update_search).props('dense outlined clearable').style("width: 250px;")
+
+                if not filtered_emps:
                     ui.html('''
                     <div class="empty-state">
                       <span class="material-icons-round">groups</span>
@@ -296,7 +327,7 @@ def employees_page():
                                         ui.html(f'<div style="display:flex;align-items:center;gap:6px;"><span class="material-icons-round" style="font-size:16px;">{icon}</span> {col}</div>')
                         
                         with ui.element("tbody"):
-                            for e in emps:
+                            for e in paged_emps:
                                 with ui.element("tr"):
                                     with ui.element("td").style("text-align: center;"):
                                         cb = ui.checkbox(on_change=lambda ev, eid=e["id"]: toggle_emp(eid, ev.value))
@@ -321,6 +352,18 @@ def employees_page():
                                                 icon=IC.DELETE, 
                                                 on_click=lambda e=e: confirm_delete_emp([e["id"]], e["name"], handle_success)
                                             ).props('flat round size=sm color="negative"').style("color: #ef4444 !important;").tooltip("Delete Employee")
+
+                with ui.element("div").style("padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 16px;"):
+                    showing_start = start_idx + 1 if total_items > 0 else 0
+                    showing_end = min(end_idx, total_items)
+                    ui.html(f'<span style="font-size: 13px; color: var(--text-muted);">Showing {showing_start} to {showing_end} of {total_items} entries</span>')
+                    
+                    def update_page(e):
+                        table_state["page"] = e.value
+                        history_container.refresh()
+                        
+                    ui.pagination(1, total_pages, value=table_state["page"], on_change=update_page).props('color="primary" outline active-color="primary" active-text-color="white"')
+
 
 
     with app_layout("Employees", "/employees", ["Management", "Employees"]):
