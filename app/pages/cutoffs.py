@@ -231,76 +231,76 @@ def cutoffs_page():
                             table_content.refresh()
                     ui.input(placeholder="Search...", value=table_state["search"], on_change=update_search).props('dense outlined clearable').style("width: 250px;")
 
-            @ui.refreshable
-            def table_content():
-                with ui.element("div").classes("card-body").style("padding: 0; overflow-x: auto;"):
-                import math
-                term = table_state["search"].lower()
-                filtered_cutoffs = [c for c in cutoffs if term in c['company'].lower() or term in c['label'].lower()] if term else cutoffs
+            with ui.element("div").classes("card-body").style("padding: 0; overflow-x: auto;"):
+                @ui.refreshable
+                def table_content():
+                    import math
+                    term = table_state["search"].lower()
+                    filtered_cutoffs = [c for c in cutoffs if term in c['company'].lower() or term in c['label'].lower()] if term else cutoffs
                 
-                total_items = len(filtered_cutoffs)
-                total_pages = math.ceil(total_items / table_state["limit"]) or 1
-                if table_state["page"] > total_pages:
-                    table_state["page"] = total_pages
+                    total_items = len(filtered_cutoffs)
+                    total_pages = math.ceil(total_items / table_state["limit"]) or 1
+                    if table_state["page"] > total_pages:
+                        table_state["page"] = total_pages
                     
-                start_idx = (table_state["page"] - 1) * table_state["limit"]
-                end_idx = start_idx + table_state["limit"]
-                paged_cutoffs = filtered_cutoffs[start_idx:end_idx]
+                    start_idx = (table_state["page"] - 1) * table_state["limit"]
+                    end_idx = start_idx + table_state["limit"]
+                    paged_cutoffs = filtered_cutoffs[start_idx:end_idx]
 
 
-                if not filtered_cutoffs:
-                    ui.html('''
-                    <div class="empty-state">
-                      <span class="material-icons-round">date_range</span>
-                      <div class="empty-state-title">No cutoffs found</div>
-                      <div class="empty-state-subtitle">Configure your first cutoff rules to get started.</div>
-                    </div>
-                    ''')
-                else:
-                    with ui.element("table").classes("data-table").style("min-width: 800px;"):
-                        with ui.element("thead"):
-                            with ui.element("tr"):
-                                with ui.element("th").style("width: 48px; text-align: center;"):
-                                    ui.checkbox(on_change=toggle_all)
-                                for col in ["Company", "Label", "Start Day", "End Day", "Actions"]:
-                                    with ui.element("th").style("text-align:left;"):
-                                        ui.html(col)
-                        with ui.element("tbody"):
-                            for c in paged_cutoffs:
+                    if not filtered_cutoffs:
+                        ui.html('''
+                        <div class="empty-state">
+                          <span class="material-icons-round">date_range</span>
+                          <div class="empty-state-title">No cutoffs found</div>
+                          <div class="empty-state-subtitle">Configure your first cutoff rules to get started.</div>
+                        </div>
+                        ''')
+                    else:
+                        with ui.element("table").classes("data-table").style("min-width: 800px;"):
+                            with ui.element("thead"):
                                 with ui.element("tr"):
-                                    with ui.element("td").style("text-align: center;"):
-                                        cb = ui.checkbox(on_change=lambda ev, rid=c["id"]: toggle_row(rid, ev.value))
-                                        checkboxes.append(cb)
-                                    with ui.element("td"):
-                                        ui.html(c["company"])
-                                    with ui.element("td"):
-                                        ui.html(f'<strong>{c["label"]}</strong>')
-                                    with ui.element("td"):
-                                        ui.html(f'Day {c["start_day"]}')
-                                    with ui.element("td"):
-                                        ed = "EoM" if c["end_day"] == 31 else f'Day {c["end_day"]}'
-                                        ui.html(ed)
-                                    with ui.element("td"):
-                                        with ui.element("div").style("display:flex; gap: 8px; align-items: center;"):
-                                            ui.button(
-                                                icon=IC.EDIT, 
-                                                on_click=lambda c=c: open_edit_dialog(c, handle_success)
-                                            ).props('flat round size=sm color="primary"').tooltip("Edit Cutoff")
-                                            ui.button(
-                                                icon=IC.DELETE, 
-                                                on_click=lambda c=c: confirm_delete_cutoff([c["id"]], c["label"], handle_success)
-                                            ).props('flat round size=sm color="negative"').style("color: #ef4444 !important;").tooltip("Delete Cutoff")
+                                    with ui.element("th").style("width: 48px; text-align: center;"):
+                                        ui.checkbox(on_change=toggle_all)
+                                    for col in ["Company", "Label", "Start Day", "End Day", "Actions"]:
+                                        with ui.element("th").style("text-align:left;"):
+                                            ui.html(col)
+                            with ui.element("tbody"):
+                                for c in paged_cutoffs:
+                                    with ui.element("tr"):
+                                        with ui.element("td").style("text-align: center;"):
+                                            cb = ui.checkbox(on_change=lambda ev, rid=c["id"]: toggle_row(rid, ev.value))
+                                            checkboxes.append(cb)
+                                        with ui.element("td"):
+                                            ui.html(c["company"])
+                                        with ui.element("td"):
+                                            ui.html(f'<strong>{c["label"]}</strong>')
+                                        with ui.element("td"):
+                                            ui.html(f'Day {c["start_day"]}')
+                                        with ui.element("td"):
+                                            ed = "EoM" if c["end_day"] == 31 else f'Day {c["end_day"]}'
+                                            ui.html(ed)
+                                        with ui.element("td"):
+                                            with ui.element("div").style("display:flex; gap: 8px; align-items: center;"):
+                                                ui.button(
+                                                    icon=IC.EDIT, 
+                                                    on_click=lambda c=c: open_edit_dialog(c, handle_success)
+                                                ).props('flat round size=sm color="primary"').tooltip("Edit Cutoff")
+                                                ui.button(
+                                                    icon=IC.DELETE, 
+                                                    on_click=lambda c=c: confirm_delete_cutoff([c["id"]], c["label"], handle_success)
+                                                ).props('flat round size=sm color="negative"').style("color: #ef4444 !important;").tooltip("Delete Cutoff")
 
-                with ui.element("div").style("padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 16px;"):
-                    showing_start = start_idx + 1 if total_items > 0 else 0
-                    showing_end = min(end_idx, total_items)
-                    ui.html(f'<span style="font-size: 13px; color: var(--text-muted);">Showing {showing_start} to {showing_end} of {total_items} entries</span>')
+                    with ui.element("div").style("padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 16px;"):
+                        showing_start = start_idx + 1 if total_items > 0 else 0
+                        showing_end = min(end_idx, total_items)
+                        ui.html(f'<span style="font-size: 13px; color: var(--text-muted);">Showing {showing_start} to {showing_end} of {total_items} entries</span>')
                     
-                    def update_page(e):
-                        table_state["page"] = e.value
-                        table_content.refresh()
+                        def update_page(e):
+                            table_state["page"] = e.value
+                            table_content.refresh()
                         
-                    ui.pagination(1, total_pages, value=table_state["page"], on_change=update_page).props('color="primary" outline active-color="primary" active-text-color="white"')
+                        ui.pagination(1, total_pages, value=table_state["page"], on_change=update_page).props('color="primary" outline active-color="primary" active-text-color="white"')
             
             table_content()
 

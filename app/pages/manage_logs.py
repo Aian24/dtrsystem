@@ -205,90 +205,90 @@ def manage_logs_page():
                                 table_content.refresh()
                         ui.input(placeholder="Search filename...", value=table_state["search"], on_change=update_search).props('dense outlined clearable').style("width: 250px;")
 
-                @ui.refreshable
-                def table_content():
-                    with ui.element("div").classes("card-body").style("padding: 0; overflow-x: auto;"):
-                    import math
-                    term = table_state["search"].lower()
-                    filtered_sessions = [s for s in sessions if term in s.filename.lower()] if term else sessions
+                with ui.element("div").classes("card-body").style("padding: 0; overflow-x: auto;"):
+                    @ui.refreshable
+                    def table_content():
+                        import math
+                        term = table_state["search"].lower()
+                        filtered_sessions = [s for s in sessions if term in s.filename.lower()] if term else sessions
                     
-                    total_items = len(filtered_sessions)
-                    total_pages = math.ceil(total_items / table_state["limit"]) or 1
-                    if table_state["page"] > total_pages:
-                        table_state["page"] = total_pages
+                        total_items = len(filtered_sessions)
+                        total_pages = math.ceil(total_items / table_state["limit"]) or 1
+                        if table_state["page"] > total_pages:
+                            table_state["page"] = total_pages
                         
-                    start_idx = (table_state["page"] - 1) * table_state["limit"]
-                    end_idx = start_idx + table_state["limit"]
-                    paged_sessions = filtered_sessions[start_idx:end_idx]
+                        start_idx = (table_state["page"] - 1) * table_state["limit"]
+                        end_idx = start_idx + table_state["limit"]
+                        paged_sessions = filtered_sessions[start_idx:end_idx]
 
 
-                    if not filtered_sessions:
-                        ui.html('''
-                        <div class="empty-state">
-                          <span class="material-icons-round">history</span>
-                          <div class="empty-state-title">No uploads found</div>
-                          <div class="empty-state-subtitle">You haven't imported any logs yet.</div>
-                        </div>
-                        ''')
-                    else:
-                        with ui.element("table").classes("data-table").style("min-width: 800px;"):
-                            with ui.element("thead"):
-                                with ui.element("tr"):
-                                    with ui.element("th").style("width: 48px; text-align: center;"):
-                                        ui.checkbox(on_change=toggle_all)
-                                    
-                                    headers = [
-                                        ("description", "File Name"),
-                                        ("calendar_today", "Date Uploaded"),
-                                        ("check_circle", "Imported"),
-                                        ("file_copy", "Duplicates"),
-                                        ("error", "Invalid"),
-                                        ("info", "Status"),
-                                        ("settings", "Actions")
-                                    ]
-                                    for icon, col in headers:
-                                        with ui.element("th"):
-                                            ui.html(f'<div style="display:flex;align-items:center;gap:6px;"><span class="material-icons-round" style="font-size:16px;">{icon}</span> {col}</div>')
-                            
-                            with ui.element("tbody"):
-                                for s in paged_sessions:
+                        if not filtered_sessions:
+                            ui.html('''
+                            <div class="empty-state">
+                              <span class="material-icons-round">history</span>
+                              <div class="empty-state-title">No uploads found</div>
+                              <div class="empty-state-subtitle">You haven't imported any logs yet.</div>
+                            </div>
+                            ''')
+                        else:
+                            with ui.element("table").classes("data-table").style("min-width: 800px;"):
+                                with ui.element("thead"):
                                     with ui.element("tr"):
-                                        with ui.element("td").style("text-align: center;"):
-                                            cb = ui.checkbox(on_change=lambda e, sid=s.id: toggle_session(sid, e.value))
-                                            checkboxes.append(cb)
-                                        with ui.element("td"):
-                                            ui.html(f"<strong>{s.filename}</strong>")
-                                        with ui.element("td"):
-                                            ui.html(f"{s.uploaded_at.strftime('%b %d, %Y %I:%M %p')}")
-                                        with ui.element("td"):
-                                            ui.html(f"{s.imported_count:,}")
-                                        with ui.element("td"):
-                                            ui.html(f"{s.duplicate_count:,}")
-                                        with ui.element("td"):
-                                            ui.html(f"{s.invalid_count:,}")
-                                        with ui.element("td"):
-                                            ui.html(f'<span class="badge badge-success" style="background: rgba(16, 185, 129, 0.1); color: #10B981;">{s.status.upper()}</span>')
-                                        with ui.element("td"):
-                                            with ui.element("div").style("display:flex; gap: 8px;"):
-                                                ui.button(
-                                                    icon="visibility", 
-                                                    on_click=lambda s=s: show_summary_modal(s)
-                                                ).props('flat round size=sm color="primary"').tooltip("View Details")
-                                                ui.button(
-                                                    icon=IC.DELETE, 
-                                                    on_click=lambda s=s: confirm_delete([s.id], s.filename, handle_delete_success)
-                                                ).props('flat round size=sm color="negative"').style("color: #ef4444 !important;").tooltip("Delete Session")
-
-                    with ui.element("div").style("padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 16px;"):
-                        showing_start = start_idx + 1 if total_items > 0 else 0
-                        showing_end = min(end_idx, total_items)
-                        ui.html(f'<span style="font-size: 13px; color: var(--text-muted);">Showing {showing_start} to {showing_end} of {total_items} entries</span>')
-                        
-                        def update_page(e):
-                            table_state["page"] = e.value
-                            table_content.refresh()
+                                        with ui.element("th").style("width: 48px; text-align: center;"):
+                                            ui.checkbox(on_change=toggle_all)
+                                    
+                                        headers = [
+                                            ("description", "File Name"),
+                                            ("calendar_today", "Date Uploaded"),
+                                            ("check_circle", "Imported"),
+                                            ("file_copy", "Duplicates"),
+                                            ("error", "Invalid"),
+                                            ("info", "Status"),
+                                            ("settings", "Actions")
+                                        ]
+                                        for icon, col in headers:
+                                            with ui.element("th"):
+                                                ui.html(f'<div style="display:flex;align-items:center;gap:6px;"><span class="material-icons-round" style="font-size:16px;">{icon}</span> {col}</div>')
                             
-                        ui.pagination(1, total_pages, value=table_state["page"], on_change=update_page).props('color="primary" outline active-color="primary" active-text-color="white"')
+                                with ui.element("tbody"):
+                                    for s in paged_sessions:
+                                        with ui.element("tr"):
+                                            with ui.element("td").style("text-align: center;"):
+                                                cb = ui.checkbox(on_change=lambda e, sid=s.id: toggle_session(sid, e.value))
+                                                checkboxes.append(cb)
+                                            with ui.element("td"):
+                                                ui.html(f"<strong>{s.filename}</strong>")
+                                            with ui.element("td"):
+                                                ui.html(f"{s.uploaded_at.strftime('%b %d, %Y %I:%M %p')}")
+                                            with ui.element("td"):
+                                                ui.html(f"{s.imported_count:,}")
+                                            with ui.element("td"):
+                                                ui.html(f"{s.duplicate_count:,}")
+                                            with ui.element("td"):
+                                                ui.html(f"{s.invalid_count:,}")
+                                            with ui.element("td"):
+                                                ui.html(f'<span class="badge badge-success" style="background: rgba(16, 185, 129, 0.1); color: #10B981;">{s.status.upper()}</span>')
+                                            with ui.element("td"):
+                                                with ui.element("div").style("display:flex; gap: 8px;"):
+                                                    ui.button(
+                                                        icon="visibility", 
+                                                        on_click=lambda s=s: show_summary_modal(s)
+                                                    ).props('flat round size=sm color="primary"').tooltip("View Details")
+                                                    ui.button(
+                                                        icon=IC.DELETE, 
+                                                        on_click=lambda s=s: confirm_delete([s.id], s.filename, handle_delete_success)
+                                                    ).props('flat round size=sm color="negative"').style("color: #ef4444 !important;").tooltip("Delete Session")
+
+                        with ui.element("div").style("padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 16px;"):
+                            showing_start = start_idx + 1 if total_items > 0 else 0
+                            showing_end = min(end_idx, total_items)
+                            ui.html(f'<span style="font-size: 13px; color: var(--text-muted);">Showing {showing_start} to {showing_end} of {total_items} entries</span>')
+                        
+                            def update_page(e):
+                                table_state["page"] = e.value
+                                table_content.refresh()
+                            
+                            ui.pagination(1, total_pages, value=table_state["page"], on_change=update_page).props('color="primary" outline active-color="primary" active-text-color="white"')
 
                 table_content()
 

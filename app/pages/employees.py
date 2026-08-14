@@ -287,87 +287,87 @@ def employees_page():
                             table_content.refresh()
                     ui.input(placeholder="Search...", value=table_state["search"], on_change=update_search).props('dense outlined clearable').style("width: 250px;")
 
-            @ui.refreshable
-            def table_content():
-                with ui.element("div").classes("card-body").style("padding: 0; overflow-x: auto;"):
-                import math
-                term = table_state["search"].lower()
-                filtered_emps = [e for e in emps if term in e['emp_id'].lower() or term in e['name'].lower() or term in e['department'].lower() or term in e['position'].lower() or term in e['company'].lower()] if term else emps
+            with ui.element("div").classes("card-body").style("padding: 0; overflow-x: auto;"):
+                @ui.refreshable
+                def table_content():
+                    import math
+                    term = table_state["search"].lower()
+                    filtered_emps = [e for e in emps if term in e['emp_id'].lower() or term in e['name'].lower() or term in e['department'].lower() or term in e['position'].lower() or term in e['company'].lower()] if term else emps
                 
-                total_items = len(filtered_emps)
-                total_pages = math.ceil(total_items / table_state["limit"]) or 1
-                if table_state["page"] > total_pages:
-                    table_state["page"] = total_pages
+                    total_items = len(filtered_emps)
+                    total_pages = math.ceil(total_items / table_state["limit"]) or 1
+                    if table_state["page"] > total_pages:
+                        table_state["page"] = total_pages
                     
-                start_idx = (table_state["page"] - 1) * table_state["limit"]
-                end_idx = start_idx + table_state["limit"]
-                paged_emps = filtered_emps[start_idx:end_idx]
+                    start_idx = (table_state["page"] - 1) * table_state["limit"]
+                    end_idx = start_idx + table_state["limit"]
+                    paged_emps = filtered_emps[start_idx:end_idx]
 
 
-                if not filtered_emps:
-                    ui.html('''
-                    <div class="empty-state">
-                      <span class="material-icons-round">groups</span>
-                      <div class="empty-state-title">No employees found</div>
-                      <div class="empty-state-subtitle">Add your first employee to get started.</div>
-                    </div>
-                    ''')
-                else:
-                    with ui.element("table").classes("data-table").style("min-width: 800px;"):
-                        with ui.element("thead"):
-                            with ui.element("tr"):
-                                with ui.element("th").style("width: 48px; text-align: center;"):
-                                    ui.checkbox(on_change=toggle_all)
-                                
-                                headers = [
-                                    ("badge", "Employee ID"),
-                                    ("person", "Full Name"),
-                                    ("business", "Company"),
-                                    ("work", "Department"),
-                                    ("engineering", "Position"),
-                                    ("settings", "Actions")
-                                ]
-                                for icon, col in headers:
-                                    with ui.element("th"):
-                                        ui.html(f'<div style="display:flex;align-items:center;gap:6px;"><span class="material-icons-round" style="font-size:16px;">{icon}</span> {col}</div>')
-                        
-                        with ui.element("tbody"):
-                            for e in paged_emps:
+                    if not filtered_emps:
+                        ui.html('''
+                        <div class="empty-state">
+                          <span class="material-icons-round">groups</span>
+                          <div class="empty-state-title">No employees found</div>
+                          <div class="empty-state-subtitle">Add your first employee to get started.</div>
+                        </div>
+                        ''')
+                    else:
+                        with ui.element("table").classes("data-table").style("min-width: 800px;"):
+                            with ui.element("thead"):
                                 with ui.element("tr"):
-                                    with ui.element("td").style("text-align: center;"):
-                                        cb = ui.checkbox(on_change=lambda ev, eid=e["id"]: toggle_emp(eid, ev.value))
-                                        checkboxes.append(cb)
-                                    with ui.element("td"):
-                                        ui.html(f"<strong>{e['emp_id']}</strong>")
-                                    with ui.element("td"):
-                                        ui.html(f"{e['name']}")
-                                    with ui.element("td"):
-                                        ui.html(f"{e['company']}")
-                                    with ui.element("td"):
-                                        ui.html(f"{e['department']}")
-                                    with ui.element("td"):
-                                        ui.html(f"{e['position']}")
-                                    with ui.element("td"):
-                                        with ui.element("div").style("display:flex; gap: 8px; align-items: center;"):
-                                            ui.button(
-                                                icon=IC.EDIT, 
-                                                on_click=lambda e=e: open_edit_dialog(e, handle_success)
-                                            ).props('flat round size=sm color="primary"').tooltip("Edit Employee")
-                                            ui.button(
-                                                icon=IC.DELETE, 
-                                                on_click=lambda e=e: confirm_delete_emp([e["id"]], e["name"], handle_success)
-                                            ).props('flat round size=sm color="negative"').style("color: #ef4444 !important;").tooltip("Delete Employee")
-
-                with ui.element("div").style("padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 16px;"):
-                    showing_start = start_idx + 1 if total_items > 0 else 0
-                    showing_end = min(end_idx, total_items)
-                    ui.html(f'<span style="font-size: 13px; color: var(--text-muted);">Showing {showing_start} to {showing_end} of {total_items} entries</span>')
-                    
-                    def update_page(e):
-                        table_state["page"] = e.value
-                        table_content.refresh()
+                                    with ui.element("th").style("width: 48px; text-align: center;"):
+                                        ui.checkbox(on_change=toggle_all)
+                                
+                                    headers = [
+                                        ("badge", "Employee ID"),
+                                        ("person", "Full Name"),
+                                        ("business", "Company"),
+                                        ("work", "Department"),
+                                        ("engineering", "Position"),
+                                        ("settings", "Actions")
+                                    ]
+                                    for icon, col in headers:
+                                        with ui.element("th"):
+                                            ui.html(f'<div style="display:flex;align-items:center;gap:6px;"><span class="material-icons-round" style="font-size:16px;">{icon}</span> {col}</div>')
                         
-                    ui.pagination(1, total_pages, value=table_state["page"], on_change=update_page).props('color="primary" outline active-color="primary" active-text-color="white"')
+                            with ui.element("tbody"):
+                                for e in paged_emps:
+                                    with ui.element("tr"):
+                                        with ui.element("td").style("text-align: center;"):
+                                            cb = ui.checkbox(on_change=lambda ev, eid=e["id"]: toggle_emp(eid, ev.value))
+                                            checkboxes.append(cb)
+                                        with ui.element("td"):
+                                            ui.html(f"<strong>{e['emp_id']}</strong>")
+                                        with ui.element("td"):
+                                            ui.html(f"{e['name']}")
+                                        with ui.element("td"):
+                                            ui.html(f"{e['company']}")
+                                        with ui.element("td"):
+                                            ui.html(f"{e['department']}")
+                                        with ui.element("td"):
+                                            ui.html(f"{e['position']}")
+                                        with ui.element("td"):
+                                            with ui.element("div").style("display:flex; gap: 8px; align-items: center;"):
+                                                ui.button(
+                                                    icon=IC.EDIT, 
+                                                    on_click=lambda e=e: open_edit_dialog(e, handle_success)
+                                                ).props('flat round size=sm color="primary"').tooltip("Edit Employee")
+                                                ui.button(
+                                                    icon=IC.DELETE, 
+                                                    on_click=lambda e=e: confirm_delete_emp([e["id"]], e["name"], handle_success)
+                                                ).props('flat round size=sm color="negative"').style("color: #ef4444 !important;").tooltip("Delete Employee")
+
+                    with ui.element("div").style("padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 16px;"):
+                        showing_start = start_idx + 1 if total_items > 0 else 0
+                        showing_end = min(end_idx, total_items)
+                        ui.html(f'<span style="font-size: 13px; color: var(--text-muted);">Showing {showing_start} to {showing_end} of {total_items} entries</span>')
+                    
+                        def update_page(e):
+                            table_state["page"] = e.value
+                            table_content.refresh()
+                        
+                        ui.pagination(1, total_pages, value=table_state["page"], on_change=update_page).props('color="primary" outline active-color="primary" active-text-color="white"')
 
             table_content()
 

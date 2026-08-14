@@ -89,101 +89,101 @@ def settings_page():
                                   <div class="empty-state-title">No users yet</div>
                                 </div>
                                 ''')
-                            else:
-                                for u in paged_users:
-                                    with ui.element("div").style(
-                                        "display:flex;align-items:center;gap:12px;"
-                                        "padding:12px 0;border-bottom:1px solid var(--border);"
-                                    ):
-                                        if getattr(u, 'avatar_base64', None):
-                                            ui.html(f'''
-                                            <div style="width:36px;height:36px;border-radius:50%;overflow:hidden;
-                                                        box-shadow:0 2px 8px rgba(0,0,0,.1);flex-shrink:0;">
-                                              <img src="data:image/png;base64,{u.avatar_base64}" style="width:100%;height:100%;object-fit:cover;" />
-                                            </div>
-                                            ''')
-                                        else:
-                                            ui.html(f'''
-                                            <div style="width:36px;height:36px;border-radius:50%;
-                                                        background:linear-gradient(135deg,#2563EB,#6366F1);
-                                                        display:flex;align-items:center;justify-content:center;
-                                                        font-weight:700;color:#fff;font-size:14px;flex-shrink:0;">
-                                              {u.username[0].upper()}
-                                            </div>
-                                            ''')
+                                else:
+                                    for u in paged_users:
+                                        with ui.element("div").style(
+                                            "display:flex;align-items:center;gap:12px;"
+                                            "padding:12px 0;border-bottom:1px solid var(--border);"
+                                        ):
+                                            if getattr(u, 'avatar_base64', None):
+                                                ui.html(f'''
+                                                <div style="width:36px;height:36px;border-radius:50%;overflow:hidden;
+                                                            box-shadow:0 2px 8px rgba(0,0,0,.1);flex-shrink:0;">
+                                                  <img src="data:image/png;base64,{u.avatar_base64}" style="width:100%;height:100%;object-fit:cover;" />
+                                                </div>
+                                                ''')
+                                            else:
+                                                ui.html(f'''
+                                                <div style="width:36px;height:36px;border-radius:50%;
+                                                            background:linear-gradient(135deg,#2563EB,#6366F1);
+                                                            display:flex;align-items:center;justify-content:center;
+                                                            font-weight:700;color:#fff;font-size:14px;flex-shrink:0;">
+                                                  {u.username[0].upper()}
+                                                </div>
+                                                ''')
                                             
-                                        ui.html(f'''
-                                        <div style="flex:1;">
-                                          <div style="font-size:13.5px;font-weight:600;color:var(--text-primary);">{u.full_name or u.username}</div>
-                                          <div style="font-size:12px;color:var(--text-muted);">{u.username} &middot; {u.role.title()}</div>
-                                        </div>
-                                        <span class="badge badge-{"success" if u.is_active else "gray"}">{("Active" if u.is_active else "Inactive")}</span>
-                                        ''')
+                                            ui.html(f'''
+                                            <div style="flex:1;">
+                                              <div style="font-size:13.5px;font-weight:600;color:var(--text-primary);">{u.full_name or u.username}</div>
+                                              <div style="font-size:12px;color:var(--text-muted);">{u.username} &middot; {u.role.title()}</div>
+                                            </div>
+                                            <span class="badge badge-{"success" if u.is_active else "gray"}">{("Active" if u.is_active else "Inactive")}</span>
+                                            ''')
                                         
-                                        def open_edit_user(user_id=u.id):
-                                            db_edit = SessionLocal()
-                                            try:
-                                                user_to_edit = db_edit.query(User).get(user_id)
-                                                if not user_to_edit: return
+                                            def open_edit_user(user_id=u.id):
+                                                db_edit = SessionLocal()
+                                                try:
+                                                    user_to_edit = db_edit.query(User).get(user_id)
+                                                    if not user_to_edit: return
                                                 
-                                                form = {
-                                                    "password": "", 
-                                                    "avatar_b64": getattr(user_to_edit, 'avatar_base64', None),
-                                                    "full_name": user_to_edit.full_name or "",
-                                                }
+                                                    form = {
+                                                        "password": "", 
+                                                        "avatar_b64": getattr(user_to_edit, 'avatar_base64', None),
+                                                        "full_name": user_to_edit.full_name or "",
+                                                    }
                                                 
-                                                def handle_avatar(e):
-                                                    try:
-                                                        content = e.content.read()
-                                                        b64_str = base64.b64encode(content).decode('utf-8')
-                                                        form["avatar_b64"] = b64_str
-                                                        toast_success("Avatar Uploaded", "Ready to save.")
-                                                    except Exception as ex:
-                                                        toast_error("Upload Failed", str(ex))
+                                                    def handle_avatar(e):
+                                                        try:
+                                                            content = e.content.read()
+                                                            b64_str = base64.b64encode(content).decode('utf-8')
+                                                            form["avatar_b64"] = b64_str
+                                                            toast_success("Avatar Uploaded", "Ready to save.")
+                                                        except Exception as ex:
+                                                            toast_error("Upload Failed", str(ex))
 
-                                                def content(dialog):
-                                                    form["full_name_input"] = ui.input("Full Name", value=form["full_name"]).props("outlined dense").style("width:100%;margin-bottom:12px;")
-                                                    form["password_input"] = ui.input("New Password (leave blank to keep current)", password=True, password_toggle_button=True).props("outlined dense").style("width:100%;margin-bottom:12px;")
-                                                    ui.html('<div style="font-size:13px;font-weight:600;margin-bottom:4px;">Profile Image</div>')
-                                                    ui.upload(on_upload=handle_avatar, auto_upload=True, max_files=1).props("accept=image/* flat bordered").style("width:100%;")
+                                                    def content(dialog):
+                                                        form["full_name_input"] = ui.input("Full Name", value=form["full_name"]).props("outlined dense").style("width:100%;margin-bottom:12px;")
+                                                        form["password_input"] = ui.input("New Password (leave blank to keep current)", password=True, password_toggle_button=True).props("outlined dense").style("width:100%;margin-bottom:12px;")
+                                                        ui.html('<div style="font-size:13px;font-weight:600;margin-bottom:4px;">Profile Image</div>')
+                                                        ui.upload(on_upload=handle_avatar, auto_upload=True, max_files=1).props("accept=image/* flat bordered").style("width:100%;")
 
-                                                def on_submit(dialog):
-                                                    db_save = SessionLocal()
-                                                    try:
-                                                        u_save = db_save.query(User).get(user_id)
-                                                        u_save.full_name = form["full_name_input"].value.strip() or None
-                                                        if form["password_input"].value:
-                                                            u_save.set_password(form["password_input"].value)
-                                                        u_save.avatar_base64 = form["avatar_b64"]
-                                                        db_save.commit()
-                                                        toast_success("User Updated", u_save.username)
-                                                        dialog.close()
-                                                        render_users()
-                                                    except Exception as e:
-                                                        db_save.rollback()
-                                                        toast_error("Error", str(e))
-                                                    finally:
-                                                        db_save.close()
+                                                    def on_submit(dialog):
+                                                        db_save = SessionLocal()
+                                                        try:
+                                                            u_save = db_save.query(User).get(user_id)
+                                                            u_save.full_name = form["full_name_input"].value.strip() or None
+                                                            if form["password_input"].value:
+                                                                u_save.set_password(form["password_input"].value)
+                                                            u_save.avatar_base64 = form["avatar_b64"]
+                                                            db_save.commit()
+                                                            toast_success("User Updated", u_save.username)
+                                                            dialog.close()
+                                                            render_users()
+                                                        except Exception as e:
+                                                            db_save.rollback()
+                                                            toast_error("Error", str(e))
+                                                        finally:
+                                                            db_save.close()
                                                         
-                                                form_dialog(f"Edit User: {user_to_edit.username}", content, on_submit, "Save Changes")
-                                            finally:
-                                                db_edit.close()
+                                                    form_dialog(f"Edit User: {user_to_edit.username}", content, on_submit, "Save Changes")
+                                                finally:
+                                                    db_edit.close()
 
-                                        with ui.element("button").classes("icon-btn").on("click", lambda _, uid=u.id: open_edit_user(uid)):
-                                            ui.html('<span class="material-icons-round" style="font-size:16px;">edit</span>')
+                                            with ui.element("button").classes("icon-btn").on("click", lambda _, uid=u.id: open_edit_user(uid)):
+                                                ui.html('<span class="material-icons-round" style="font-size:16px;">edit</span>')
 
-                                with ui.element("div").style("padding-top: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;"):
-                                    showing_start = start_idx + 1 if total_items > 0 else 0
-                                    showing_end = min(end_idx, total_items)
-                                    ui.html(f'<span style="font-size: 13px; color: var(--text-muted);">Showing {showing_start} to {showing_end} of {total_items} entries</span>')
+                                    with ui.element("div").style("padding-top: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;"):
+                                        showing_start = start_idx + 1 if total_items > 0 else 0
+                                        showing_end = min(end_idx, total_items)
+                                        ui.html(f'<span style="font-size: 13px; color: var(--text-muted);">Showing {showing_start} to {showing_end} of {total_items} entries</span>')
                                     
-                                    def update_upage(e):
-                                        table_state_users["page"] = e.value
-                                        table_content.refresh()
+                                        def update_upage(e):
+                                            table_state_users["page"] = e.value
+                                            table_content.refresh()
                                         
-                                    ui.pagination(1, total_pages, value=table_state_users["page"], on_change=update_upage).props('color="primary" outline active-color="primary" active-text-color="white"')
+                                        ui.pagination(1, total_pages, value=table_state_users["page"], on_change=update_upage).props('color="primary" outline active-color="primary" active-text-color="white"')
 
-                            table_content()
+                                table_content()
                     
                     render_users()
                     ui.element("div").classes("separator")
