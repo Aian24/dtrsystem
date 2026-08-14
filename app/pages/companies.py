@@ -211,7 +211,28 @@ def companies_page():
                 else:
                     bulk_actions.style("display: none;")
 
-            with ui.element("div").classes("card-body").style("padding: 0; overflow-x: auto;"):
+            with ui.element("div").style("padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); gap: 16px; flex-wrap: wrap;"):
+                with ui.element("div").style("display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted);"):
+                    ui.html("<span>Show</span>")
+                    def update_limit(e):
+                        table_state["limit"] = e.value
+                        table_state["page"] = 1
+                        table_content.refresh()
+                    ui.select(options=[10, 25, 50, 100], value=table_state["limit"], on_change=update_limit).props('dense outlined').style("width: 70px;")
+                    ui.html("<span>entries</span>")
+                    
+                with ui.element("div"):
+                    def update_search(e):
+                        val = e.value or ""
+                        if table_state["search"] != val:
+                            table_state["search"] = val
+                            table_state["page"] = 1
+                            table_content.refresh()
+                    ui.input(placeholder="Search...", value=table_state["search"], on_change=update_search).props('dense outlined clearable').style("width: 250px;")
+
+            @ui.refreshable
+            def table_content():
+                with ui.element("div").classes("card-body").style("padding: 0; overflow-x: auto;"):
                 import math
                 term = table_state["search"].lower()
                 filtered_rows = [r for r in rows if term in r['name'].lower() or term in (r['address'] or '').lower()] if term else rows
@@ -225,22 +246,6 @@ def companies_page():
                 end_idx = start_idx + table_state["limit"]
                 paged_rows = filtered_rows[start_idx:end_idx]
 
-                with ui.element("div").style("padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); gap: 16px; flex-wrap: wrap;"):
-                    with ui.element("div").style("display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted);"):
-                        ui.html("<span>Show</span>")
-                        def update_limit(e):
-                            table_state["limit"] = e.value
-                            table_state["page"] = 1
-                            history_container.refresh()
-                        ui.select(options=[10, 25, 50, 100], value=table_state["limit"], on_change=update_limit).props('dense outlined').style("width: 70px;")
-                        ui.html("<span>entries</span>")
-                        
-                    with ui.element("div"):
-                        def update_search(e):
-                            table_state["search"] = e.value
-                            table_state["page"] = 1
-                            history_container.refresh()
-                        ui.input(placeholder="Search...", value=table_state["search"], on_change=update_search).props('dense outlined clearable').style("width: 250px;")
 
                 if not filtered_rows:
                     ui.html('''
@@ -303,9 +308,11 @@ def companies_page():
                     
                     def update_page(e):
                         table_state["page"] = e.value
-                        history_container.refresh()
+                        table_content.refresh()
                         
                     ui.pagination(1, total_pages, value=table_state["page"], on_change=update_page).props('color="primary" outline active-color="primary" active-text-color="white"')
+
+            table_content()
 
     with app_layout("Companies", "/companies", ["Management", "Companies"]):
         history_container()

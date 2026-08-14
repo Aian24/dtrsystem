@@ -50,37 +50,41 @@ def settings_page():
                             finally:
                                 db2.close()
 
-                            import math
-                            term = table_state_users["search"].lower()
-                            filtered_users = [u for u in users2 if term in u.username.lower() or term in u.role.lower() or term in (u.full_name or '').lower()] if term else users2
-                            
-                            total_items = len(filtered_users)
-                            total_pages = math.ceil(total_items / table_state_users["limit"]) or 1
-                            if table_state_users["page"] > total_pages: table_state_users["page"] = total_pages
-                            
-                            start_idx = (table_state_users["page"] - 1) * table_state_users["limit"]
-                            end_idx = start_idx + table_state_users["limit"]
-                            paged_users = filtered_users[start_idx:end_idx]
-
                             with ui.element("div").style("margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;"):
                                 with ui.element("div").style("display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted);"):
                                     ui.html("<span>Show</span>")
                                     def update_ulimit(e):
                                         table_state_users["limit"] = e.value
                                         table_state_users["page"] = 1
-                                        render_users()
+                                        table_content.refresh()
                                     ui.select(options=[5, 10, 25], value=table_state_users["limit"], on_change=update_ulimit).props('dense outlined').style("width: 70px;")
                                     ui.html("<span>entries</span>")
                                     
                                 with ui.element("div"):
                                     def update_usearch(e):
-                                        table_state_users["search"] = e.value
-                                        table_state_users["page"] = 1
-                                        render_users()
+                                        val = e.value or ""
+                                        if table_state_users["search"] != val:
+                                            table_state_users["search"] = val
+                                            table_state_users["page"] = 1
+                                            table_content.refresh()
                                     ui.input(placeholder="Search users...", value=table_state_users["search"], on_change=update_usearch).props('dense outlined clearable').style("width: 200px;")
 
-                            if not filtered_users:
-                                ui.html('''
+                            @ui.refreshable
+                            def table_content():
+                                import math
+                                term = table_state_users["search"].lower()
+                                filtered_users = [u for u in users2 if term in u.username.lower() or term in u.role.lower() or term in (u.full_name or '').lower()] if term else users2
+                                
+                                total_items = len(filtered_users)
+                                total_pages = math.ceil(total_items / table_state_users["limit"]) or 1
+                                if table_state_users["page"] > total_pages: table_state_users["page"] = total_pages
+                                
+                                start_idx = (table_state_users["page"] - 1) * table_state_users["limit"]
+                                end_idx = start_idx + table_state_users["limit"]
+                                paged_users = filtered_users[start_idx:end_idx]
+                                
+                                if not filtered_users:
+                                    ui.html('''
                                 <div class="empty-state" style="padding:30px;">
                                   <div class="empty-state-title">No users yet</div>
                                 </div>
@@ -175,9 +179,11 @@ def settings_page():
                                     
                                     def update_upage(e):
                                         table_state_users["page"] = e.value
-                                        render_users()
+                                        table_content.refresh()
                                         
                                     ui.pagination(1, total_pages, value=table_state_users["page"], on_change=update_upage).props('color="primary" outline active-color="primary" active-text-color="white"')
+
+                            table_content()
                     
                     render_users()
                     ui.element("div").classes("separator")

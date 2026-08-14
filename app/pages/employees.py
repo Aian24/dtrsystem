@@ -268,7 +268,28 @@ def employees_page():
                 else:
                     bulk_actions.style("display: none;")
 
-            with ui.element("div").classes("card-body").style("padding: 0; overflow-x: auto;"):
+            with ui.element("div").style("padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); gap: 16px; flex-wrap: wrap;"):
+                with ui.element("div").style("display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted);"):
+                    ui.html("<span>Show</span>")
+                    def update_limit(e):
+                        table_state["limit"] = e.value
+                        table_state["page"] = 1
+                        table_content.refresh()
+                    ui.select(options=[10, 25, 50, 100], value=table_state["limit"], on_change=update_limit).props('dense outlined').style("width: 70px;")
+                    ui.html("<span>entries</span>")
+                    
+                with ui.element("div"):
+                    def update_search(e):
+                        val = e.value or ""
+                        if table_state["search"] != val:
+                            table_state["search"] = val
+                            table_state["page"] = 1
+                            table_content.refresh()
+                    ui.input(placeholder="Search...", value=table_state["search"], on_change=update_search).props('dense outlined clearable').style("width: 250px;")
+
+            @ui.refreshable
+            def table_content():
+                with ui.element("div").classes("card-body").style("padding: 0; overflow-x: auto;"):
                 import math
                 term = table_state["search"].lower()
                 filtered_emps = [e for e in emps if term in e['emp_id'].lower() or term in e['name'].lower() or term in e['department'].lower() or term in e['position'].lower() or term in e['company'].lower()] if term else emps
@@ -282,22 +303,6 @@ def employees_page():
                 end_idx = start_idx + table_state["limit"]
                 paged_emps = filtered_emps[start_idx:end_idx]
 
-                with ui.element("div").style("padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); gap: 16px; flex-wrap: wrap;"):
-                    with ui.element("div").style("display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted);"):
-                        ui.html("<span>Show</span>")
-                        def update_limit(e):
-                            table_state["limit"] = e.value
-                            table_state["page"] = 1
-                            history_container.refresh()
-                        ui.select(options=[10, 25, 50, 100], value=table_state["limit"], on_change=update_limit).props('dense outlined').style("width: 70px;")
-                        ui.html("<span>entries</span>")
-                        
-                    with ui.element("div"):
-                        def update_search(e):
-                            table_state["search"] = e.value
-                            table_state["page"] = 1
-                            history_container.refresh()
-                        ui.input(placeholder="Search...", value=table_state["search"], on_change=update_search).props('dense outlined clearable').style("width: 250px;")
 
                 if not filtered_emps:
                     ui.html('''
@@ -360,9 +365,11 @@ def employees_page():
                     
                     def update_page(e):
                         table_state["page"] = e.value
-                        history_container.refresh()
+                        table_content.refresh()
                         
                     ui.pagination(1, total_pages, value=table_state["page"], on_change=update_page).props('color="primary" outline active-color="primary" active-text-color="white"')
+
+            table_content()
 
 
 
