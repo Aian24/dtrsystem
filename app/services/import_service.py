@@ -42,7 +42,7 @@ def import_log_file(
             uploaded_by=uploaded_by,
         )
         db.add(session)
-        db.flush()
+        db.commit()
         session_id = session.id
 
         # Read all lines
@@ -57,7 +57,7 @@ def import_log_file(
         if not default_company:
             default_company = Company(name="Main Company")
             db.add(default_company)
-            db.flush()
+            db.commit()
 
         # Cache employee lookup by emp_id string → DB id
         emp_cache: dict[str, Optional[int]] = {}
@@ -122,7 +122,7 @@ def import_log_file(
                     is_active=False,
                 )
                 db.add(new_emp)
-                db.flush()
+                db.commit()
                 emp_db_id = new_emp.id
                 emp_cache[raw_emp_id] = emp_db_id
                 emp_cache[emp_id_str] = emp_db_id
@@ -146,8 +146,6 @@ def import_log_file(
             except IntegrityError:
                 db.rollback()
                 duplicates += 1
-                # re-attach session
-                db.add(session)
                 continue
 
         # Update session record

@@ -213,15 +213,13 @@ def upload_page():
                                 ui.run_javascript('document.getElementById("modal-filename-display").innerHTML = "Processing files...";')
                                 progress_modal.open()
                                 
-                                for f in e.files:
-                                    # Compatible across nicegui versions
-                                    file_name = getattr(f, "name", getattr(f, "filename", "unknown.log"))
+                                for file_name, file_content_obj in zip(e.names, e.contents):
                                     file_names.append(file_name)
                                     ui.run_javascript(f'document.getElementById("modal-filename-display").innerHTML = "Processing <strong>{file_name}</strong>";')
                                     
                                     # Save file
                                     save_path = LOGS_DIR / file_name
-                                    file_content = f.content.read() if hasattr(f, "content") else await f.read()
+                                    file_content = file_content_obj.read() if hasattr(file_content_obj, "read") else await file_content_obj.read()
                                     save_path.write_bytes(file_content)
                                     
                                     import_state = {"pct": 0, "msg": "Reading file...", "done": False, "error": None, "result": None}
