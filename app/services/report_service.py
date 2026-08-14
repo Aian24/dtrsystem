@@ -161,6 +161,16 @@ def generate_report(
             present = sum(1 for e in entries if e.get("time_in"))
             absent  = sum(1 for e in entries if not e.get("time_in"))
             late    = sum(1 for e in entries if e.get("is_late"))
+            
+            if report_type == "late" and late == 0:
+                continue
+            if report_type == "absent" and absent == 0:
+                continue
+            if report_type == "missing":
+                missing = sum(1 for e in entries if e.get("time_in") and not e.get("time_out"))
+                if missing == 0:
+                    continue
+                    
             rows.append({
                 "emp_id":    emp.emp_id,
                 "name":      f"{emp.last_name}, {emp.first_name}",

@@ -79,15 +79,25 @@ def reports_page():
                         with ui.element("div").classes("card-body"):
                             db = SessionLocal()
                             try:
-                                cos = db.query(Company).filter(Company.is_active == True).all()
-                                co_options = {0: "— All Companies —", **{c.id: c.name for c in cos}}
+                                if rtype == "dtr":
+                                    from app.core.models import Employee
+                                    emps = db.query(Employee).filter(Employee.is_active == True).all()
+                                    emp_options = {e.id: f"{e.last_name}, {e.first_name} ({e.emp_id})" for e in emps}
+                                    
+                                    ui.html('<div class="form-label">Employee</div>')
+                                    form_refs["employee"] = ui.select(
+                                        options=emp_options, value=list(emp_options.keys())[0] if emp_options else None
+                                    ).props("outlined dense").style("width:100%;margin-bottom:14px;")
+                                else:
+                                    cos = db.query(Company).filter(Company.is_active == True).all()
+                                    co_options = {0: "— All Companies —", **{c.id: c.name for c in cos}}
+    
+                                    ui.html('<div class="form-label">Company</div>')
+                                    form_refs["company"] = ui.select(
+                                        options=co_options, value=0
+                                    ).props("outlined dense").style("width:100%;margin-bottom:14px;")
                             finally:
                                 db.close()
-
-                            ui.html('<div class="form-label">Company</div>')
-                            form_refs["company"] = ui.select(
-                                options=co_options, value=0
-                            ).props("outlined dense").style("width:100%;margin-bottom:14px;")
 
                             with ui.element("div").classes("grid-cols-2").style("margin-bottom:14px;"):
                                 with ui.element("div"):
@@ -109,22 +119,44 @@ def reports_page():
 
                                 async def gen_pdf():
                                     try:
-                                        from app.services.report_service import generate_report
+                                        import os
+                                        from app.services.report_service import generate_report, generate_dtr_pdf
                                         from app.core.config import REPORTS_DIR
-                                        co_id = form_refs["company"].value or None
+                                        
                                         d_from = date.fromisoformat(form_refs["date_from"].value)
                                         d_to   = date.fromisoformat(form_refs["date_to"].value)
-                                        filename = f"{rtype}_report_{d_from}_{d_to}.pdf"
-                                        path = REPORTS_DIR / filename
-                                        toast_info("Generating PDF…", "Please wait")
-                                        generate_report(rtype, co_id, d_from, d_to, str(path), fmt="pdf")
-                                        ui.download(str(path), filename)
+                                        
+                                        if rtype == "dtr":
+                                            emp_id = form_refs["employee"].value
+                                            if not emp_id:
+                                                toast_error("Error", "No employee selected")
+                                                return
+                                            filename = f"dtr_report_{emp_id}_{d_from}_{d_to}.pdf"
+                                            path = REPORTS_DIR / filename
+                                            toast_info("Generating PDF…", "Please wait")
+                                            generate_dtr_pdf(emp_id, d_from, d_to, str(path))
+                                        else:
+                                            co_id = form_refs["company"].value or None
+                                            filename = f"{rtype}_report_{d_from}_{d_to}.pdf"
+                                            path = REPORTS_DIR / filename
+                                            toast_info("Generating PDF…", "Please wait")
+                                            generate_report(rtype, co_id, d_from, d_to, str(path), fmt="pdf")
+                                        
+                                        if hasattr(os, "startfile"):
+                                            os.startfile(str(path))
+                                        else:
+                                            ui.download(str(path), filename)
                                         toast_success("PDF Ready", filename)
                                     except Exception as ex:
                                         toast_error("Error", str(ex))
 
                                 async def gen_excel():
                                     try:
+                                        if rtype == "dtr":
+                                            toast_error("Not Supported", "Excel export is not supported for individual DTRs.")
+                                            return
+                                            
+                                        import os
                                         from app.services.report_service import generate_report
                                         from app.core.config import REPORTS_DIR
                                         co_id = form_refs["company"].value or None
@@ -134,7 +166,11 @@ def reports_page():
                                         path = REPORTS_DIR / filename
                                         toast_info("Generating Excel…", "Please wait")
                                         generate_report(rtype, co_id, d_from, d_to, str(path), fmt="excel")
-                                        ui.download(str(path), filename)
+                                        
+                                        if hasattr(os, "startfile"):
+                                            os.startfile(str(path))
+                                        else:
+                                            ui.download(str(path), filename)
                                         toast_success("Excel Ready", filename)
                                     except Exception as ex:
                                         toast_error("Error", str(ex))
