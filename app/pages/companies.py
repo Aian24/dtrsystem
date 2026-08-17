@@ -26,8 +26,6 @@ def _get_companies():
                 "employees":    len([e for e in c.employees if e.is_active]),
                 # raw values for edit
                 "_grace":       c.grace_period,
-                "_start":       c.work_start,
-                "_end":         c.work_end,
                 "_address":     c.address or "",
                 "_area_manager": c.area_manager or "",
                 "_store_supervisor": c.store_supervisor or "",
@@ -89,8 +87,7 @@ def open_edit_dialog(row, on_success):
             form["store_supervisor"] = ui.input("Store Supervisor", value=row["_store_supervisor"]).props("outlined dense").style("width:100%;margin-bottom:14px;")
         with ui.element("div").classes("grid-cols-3"):
             form["grace"] = ui.number("Grace Period (min)", value=row["_grace"], min=0, max=60).props("outlined dense")
-            form["start"] = ui.input("Work Start", value=row["_start"]).props("outlined dense")
-            form["end"]   = ui.input("Work End",   value=row["_end"]).props("outlined dense")
+
 
     def on_submit(dialog):
         db = SessionLocal()
@@ -99,8 +96,6 @@ def open_edit_dialog(row, on_success):
             co.name = form["name"].value.strip()
             co.address = form["address"].value.strip() or None
             co.grace_period = int(form["grace"].value or 10)
-            co.work_start = form["start"].value.strip() or "08:00"
-            co.work_end = form["end"].value.strip() or "17:00"
             co.area_manager = form["area_manager"].value.strip() or None
             co.store_supervisor = form["store_supervisor"].value.strip() or None
             
@@ -128,8 +123,7 @@ def open_add_dialog(on_success):
             form["store_supervisor"] = ui.input("Store Supervisor").props("outlined dense").style("width:100%;margin-bottom:14px;")
         with ui.element("div").classes("grid-cols-3"):
             form["grace"] = ui.number("Grace Period (min)", value=10, min=0, max=60).props("outlined dense")
-            form["start"] = ui.input("Work Start", value="08:00").props("outlined dense")
-            form["end"]   = ui.input("Work End",   value="17:00").props("outlined dense")
+
 
     def on_submit(dialog):
         db = SessionLocal()
@@ -138,8 +132,6 @@ def open_add_dialog(on_success):
                 name=form["name"].value.strip(),
                 address=form["address"].value.strip() or None,
                 grace_period=int(form["grace"].value or 10),
-                work_start=form["start"].value.strip() or "08:00",
-                work_end=form["end"].value.strip() or "17:00",
                 area_manager=form["area_manager"].value.strip() or None,
                 store_supervisor=form["store_supervisor"].value.strip() or None,
             )
@@ -266,7 +258,6 @@ def companies_page():
                                         ("business", "Company Name"),
                                         ("groups", "Employees"),
                                         ("schedule", "Grace Period"),
-                                        ("access_time", "Work Hours"),
                                         ("place", "Address"),
                                         ("settings", "Actions")
                                     ]
@@ -286,8 +277,6 @@ def companies_page():
                                             ui.html(f"{r['employees']}")
                                         with ui.element("td"):
                                             ui.html(f"{r['grace_period']}")
-                                        with ui.element("td"):
-                                            ui.html(f"{r['work_hours']}")
                                         with ui.element("td"):
                                             ui.html(f"{r['address']}")
                                         with ui.element("td"):

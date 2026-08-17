@@ -10,6 +10,209 @@ from app.components.notifications import toast_success, toast_error
 from app.theme.icons import IC
 from app.core.database import SessionLocal
 from app.core.models import Employee, Company, AttendanceLog
+import json
+
+
+
+TIME_OPTIONS = [f"{h:02d}:{m:02d} {ampm}" for ampm in ["AM", "PM"] for h in ([12] + list(range(1, 12))) for m in [0, 15, 30, 45]]
+
+def render_custom_schedule_dialog(state_dict, default_state, emp_name="New Employee"):
+    with ui.dialog() as dlg, ui.card().style("width: 650px; max-width: 95vw; max-height: 90vh; overflow-y: auto;").classes("p-6"):
+        ui.label(f"Schedule - {emp_name}").classes("text-xl font-black text-slate-800 mb-4")
+        
+        savers = []
+        
+        ui.label("Default Schedule").classes("text-sm font-bold text-slate-700")
+        with ui.card().classes("w-full mb-6 p-4 bg-slate-50 border border-slate-200 shadow-none"):
+            with ui.element("div").classes("grid grid-cols-3 gap-3 w-full"):
+                def_s1 = ui.select(TIME_OPTIONS, value=default_state.get("work_start"), label="Work Start").props('outlined dense clearable options-dense popup-content-class="h-48 overflow-y-auto"')
+                def_s2 = ui.select(TIME_OPTIONS, value=default_state.get("break_out_1"), label="1st Break Out").props('outlined dense clearable options-dense popup-content-class="h-48 overflow-y-auto"')
+                def_s3 = ui.select(TIME_OPTIONS, value=default_state.get("break_in_1"), label="1st Break In").props('outlined dense clearable options-dense popup-content-class="h-48 overflow-y-auto"')
+                def_s4 = ui.select(TIME_OPTIONS, value=default_state.get("break_out_2"), label="2nd Break Out").props('outlined dense clearable options-dense popup-content-class="h-48 overflow-y-auto"')
+                def_s5 = ui.select(TIME_OPTIONS, value=default_state.get("break_in_2"), label="2nd Break In").props('outlined dense clearable options-dense popup-content-class="h-48 overflow-y-auto"')
+                def_s6 = ui.select(TIME_OPTIONS, value=default_state.get("work_end"), label="Work End").props('outlined dense clearable options-dense popup-content-class="h-48 overflow-y-auto"')
+            
+            def make_def_saver(s1=def_s1, s2=def_s2, s3=def_s3, s4=def_s4, s5=def_s5, s6=def_s6):
+                def save_def():
+                    default_state["work_start"] = s1.value
+                    default_state["break_out_1"] = s2.value
+                    default_state["break_in_1"] = s3.value
+                    default_state["break_out_2"] = s4.value
+                    default_state["break_in_2"] = s5.value
+                    default_state["work_end"] = s6.value
+                return save_def
+            savers.append(make_def_saver())
+
+        ui.label("Customize Specific Days").classes("text-sm font-bold text-slate-700 mt-2")
+        ui.label("Override default schedule for specific days. Leave a day unchecked to use the default.").classes("text-xs text-slate-500 mb-4")
+        
+        days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+        
+        for day in days:
+            with ui.card().classes("w-full mb-3 p-3 bg-white border border-slate-200 shadow-none"):
+                day_data = state_dict.get(day, {})
+                
+                with ui.row().classes("w-full items-center justify-between"):
+                    enabled = ui.checkbox(day).props("dense size=sm").classes("font-medium text-slate-700")
+                    is_rest = ui.checkbox("Set as Rest Day").props("dense size=sm color=red-5").classes("text-red-500 font-medium").bind_visibility_from(enabled, "value")
+                    
+                    if day in state_dict:
+                        enabled.value = True
+                        is_rest.value = state_dict[day].get("is_rest_day", False)
+                        
+                with ui.column().classes("w-full mt-3").bind_visibility_from(enabled, "value"):
+                    with ui.element("div").classes("grid grid-cols-3 gap-3 w-full").bind_visibility_from(is_rest, "value", value=False):
+                        ws = ui.select(TIME_OPTIONS, value=day_data.get("work_start"), label="Work Start").props('outlined dense clearable options-dense popup-content-class="h-48 overflow-y-auto"')
+                        bo1 = ui.select(TIME_OPTIONS, value=day_data.get("break_out_1"), label="1st Break Out").props('outlined dense clearable options-dense popup-content-class="h-48 overflow-y-auto"')
+                        bi1 = ui.select(TIME_OPTIONS, value=day_data.get("break_in_1"), label="1st Break In").props('outlined dense clearable options-dense popup-content-class="h-48 overflow-y-auto"')
+                        bo2 = ui.select(TIME_OPTIONS, value=day_data.get("break_out_2"), label="2nd Break Out").props('outlined dense clearable options-dense popup-content-class="h-48 overflow-y-auto"')
+                        bi2 = ui.select(TIME_OPTIONS, value=day_data.get("break_in_2"), label="2nd Break In").props('outlined dense clearable options-dense popup-content-class="h-48 overflow-y-auto"')
+                        we = ui.select(TIME_OPTIONS, value=day_data.get("work_end"), label="Work End").props('outlined dense clearable options-dense popup-content-class="h-48 overflow-y-auto"')
+                
+                # Auto-fill defaults when day is checked
+                def make_on_enable(e_ui=enabled, s1_ui=ws, s2_ui=bo1, s3_ui=bi1, s4_ui=bo2, s5_ui=bi2, s6_ui=we):
+                    def handle_enable():
+                        if e_ui.value and not s1_ui.value: # if newly checked and blank
+                            s1_ui.value = default_state.get("work_start")
+                            s2_ui.value = default_state.get("break_out_1")
+                            s3_ui.value = default_state.get("break_in_1")
+                            s4_ui.value = default_state.get("break_out_2")
+                            s5_ui.value = default_state.get("break_in_2")
+                            s6_ui.value = default_state.get("work_end")
+                    return handle_enable
+                enabled.on("update:model-value", make_on_enable())
+
+                def make_saver(d=day, e=enabled, r=is_rest, s1=ws, s2=bo1, s3=bi1, s4=bo2, s5=bi2, s6=we):
+                    def save_day():
+                        if not e.value:
+                            if d in state_dict:
+                                del state_dict[d]
+                        else:
+                            state_dict[d] = {
+                                "is_rest_day": r.value,
+                                "work_start": s1.value,
+                                "break_out_1": s2.value,
+                                "break_in_1": s3.value,
+                                "break_out_2": s4.value,
+                                "break_in_2": s5.value,
+                                "work_end": s6.value
+                            }
+                    return save_day
+                
+                savers.append(make_saver())
+                
+        def save_all_and_close():
+            for s in savers:
+                s()
+            dlg.close()
+                
+        with ui.row().classes("w-full justify-end mt-4"):
+            ui.button("Done", on_click=save_all_and_close).props("unelevated color=primary px-6 rounded-md")
+            
+    return dlg
+
+_IGNORE_TIME_OPTS_ = [f"{h:02d}:{m:02d} {ampm}" for ampm in ["AM", "PM"] for h in ([12] + list(range(1, 12))) for m in [0, 30]]
+# We can also add other intervals if needed, but 30 min is standard. For this, let's use 15 min intervals.
+
+
+TIME_OPTIONS = [f"{h:02d}:{m:02d} {ampm}" for ampm in ["AM", "PM"] for h in ([12] + list(range(1, 12))) for m in [0, 15, 30, 45]]
+
+def render_custom_schedule_dialog(state_dict, default_state, emp_name="New Employee"):
+    with ui.dialog() as dlg, ui.card().style("width: 650px; max-width: 95vw; max-height: 90vh; overflow-y: auto;").classes("p-6"):
+        ui.label(f"Schedule - {emp_name}").classes("text-xl font-black text-slate-800 mb-4")
+        
+        savers = []
+        
+        ui.label("Default Schedule").classes("text-sm font-bold text-slate-700")
+        with ui.card().classes("w-full mb-6 p-4 bg-slate-50 border border-slate-200 shadow-none"):
+            with ui.element("div").classes("grid grid-cols-3 gap-3 w-full"):
+                def_s1 = ui.select(TIME_OPTIONS, value=default_state.get("work_start"), label="Work Start").props('outlined dense clearable options-dense popup-content-class="h-48 overflow-y-auto"')
+                def_s2 = ui.select(TIME_OPTIONS, value=default_state.get("break_out_1"), label="1st Break Out").props('outlined dense clearable options-dense popup-content-class="h-48 overflow-y-auto"')
+                def_s3 = ui.select(TIME_OPTIONS, value=default_state.get("break_in_1"), label="1st Break In").props('outlined dense clearable options-dense popup-content-class="h-48 overflow-y-auto"')
+                def_s4 = ui.select(TIME_OPTIONS, value=default_state.get("break_out_2"), label="2nd Break Out").props('outlined dense clearable options-dense popup-content-class="h-48 overflow-y-auto"')
+                def_s5 = ui.select(TIME_OPTIONS, value=default_state.get("break_in_2"), label="2nd Break In").props('outlined dense clearable options-dense popup-content-class="h-48 overflow-y-auto"')
+                def_s6 = ui.select(TIME_OPTIONS, value=default_state.get("work_end"), label="Work End").props('outlined dense clearable options-dense popup-content-class="h-48 overflow-y-auto"')
+            
+            def make_def_saver(s1=def_s1, s2=def_s2, s3=def_s3, s4=def_s4, s5=def_s5, s6=def_s6):
+                def save_def():
+                    default_state["work_start"] = s1.value
+                    default_state["break_out_1"] = s2.value
+                    default_state["break_in_1"] = s3.value
+                    default_state["break_out_2"] = s4.value
+                    default_state["break_in_2"] = s5.value
+                    default_state["work_end"] = s6.value
+                return save_def
+            savers.append(make_def_saver())
+
+        ui.label("Customize Specific Days").classes("text-sm font-bold text-slate-700 mt-2")
+        ui.label("Override default schedule for specific days. Leave a day unchecked to use the default.").classes("text-xs text-slate-500 mb-4")
+        
+        days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+        
+        for day in days:
+            with ui.card().classes("w-full mb-3 p-3 bg-white border border-slate-200 shadow-none"):
+                day_data = state_dict.get(day, {})
+                
+                with ui.row().classes("w-full items-center justify-between"):
+                    enabled = ui.checkbox(day).props("dense size=sm").classes("font-medium text-slate-700")
+                    is_rest = ui.checkbox("Set as Rest Day").props("dense size=sm color=red-5").classes("text-red-500 font-medium").bind_visibility_from(enabled, "value")
+                    
+                    if day in state_dict:
+                        enabled.value = True
+                        is_rest.value = state_dict[day].get("is_rest_day", False)
+                        
+                with ui.column().classes("w-full mt-3").bind_visibility_from(enabled, "value"):
+                    with ui.element("div").classes("grid grid-cols-3 gap-3 w-full").bind_visibility_from(is_rest, "value", value=False):
+                        ws = ui.select(TIME_OPTIONS, value=day_data.get("work_start"), label="Work Start").props('outlined dense clearable options-dense popup-content-class="h-48 overflow-y-auto"')
+                        bo1 = ui.select(TIME_OPTIONS, value=day_data.get("break_out_1"), label="1st Break Out").props('outlined dense clearable options-dense popup-content-class="h-48 overflow-y-auto"')
+                        bi1 = ui.select(TIME_OPTIONS, value=day_data.get("break_in_1"), label="1st Break In").props('outlined dense clearable options-dense popup-content-class="h-48 overflow-y-auto"')
+                        bo2 = ui.select(TIME_OPTIONS, value=day_data.get("break_out_2"), label="2nd Break Out").props('outlined dense clearable options-dense popup-content-class="h-48 overflow-y-auto"')
+                        bi2 = ui.select(TIME_OPTIONS, value=day_data.get("break_in_2"), label="2nd Break In").props('outlined dense clearable options-dense popup-content-class="h-48 overflow-y-auto"')
+                        we = ui.select(TIME_OPTIONS, value=day_data.get("work_end"), label="Work End").props('outlined dense clearable options-dense popup-content-class="h-48 overflow-y-auto"')
+                
+                # Auto-fill defaults when day is checked
+                def make_on_enable(e_ui=enabled, s1_ui=ws, s2_ui=bo1, s3_ui=bi1, s4_ui=bo2, s5_ui=bi2, s6_ui=we):
+                    def handle_enable():
+                        if e_ui.value and not s1_ui.value: # if newly checked and blank
+                            s1_ui.value = default_state.get("work_start")
+                            s2_ui.value = default_state.get("break_out_1")
+                            s3_ui.value = default_state.get("break_in_1")
+                            s4_ui.value = default_state.get("break_out_2")
+                            s5_ui.value = default_state.get("break_in_2")
+                            s6_ui.value = default_state.get("work_end")
+                    return handle_enable
+                enabled.on("update:model-value", make_on_enable())
+
+                def make_saver(d=day, e=enabled, r=is_rest, s1=ws, s2=bo1, s3=bi1, s4=bo2, s5=bi2, s6=we):
+                    def save_day():
+                        if not e.value:
+                            if d in state_dict:
+                                del state_dict[d]
+                        else:
+                            state_dict[d] = {
+                                "is_rest_day": r.value,
+                                "work_start": s1.value,
+                                "break_out_1": s2.value,
+                                "break_in_1": s3.value,
+                                "break_out_2": s4.value,
+                                "break_in_2": s5.value,
+                                "work_end": s6.value
+                            }
+                    return save_day
+                
+                savers.append(make_saver())
+                
+        def save_all_and_close():
+            for s in savers:
+                s()
+            dlg.close()
+                
+        with ui.row().classes("w-full justify-end mt-4"):
+            ui.button("Done", on_click=save_all_and_close).props("unelevated color=primary px-6 rounded-md")
+            
+    return dlg
+
+_IGNORE_TIME_OPTS_ = [f"{h:02d}:{m:02d} {ampm}" for ampm in ["AM", "PM"] for h in ([12] + list(range(1, 12))) for m in [0, 15, 30, 45]]
 
 
 def _get_companies():
@@ -34,6 +237,13 @@ def _get_employees():
                 "position":   e.position or "—",
                 "company_id": e.company_id,
                 "schedule_type": getattr(e, "schedule_type", "Mon-Sat") or "Mon-Sat",
+                "work_start": getattr(e, "work_start", None),
+                "break_out_1": getattr(e, "break_out_1", None),
+                "break_in_1": getattr(e, "break_in_1", None),
+                "break_out_2": getattr(e, "break_out_2", None),
+                "break_in_2": getattr(e, "break_in_2", None),
+                "work_end": getattr(e, "work_end", None),
+                "custom_schedule": getattr(e, "custom_schedule", None),
                 "first_name": e.first_name,
                 "last_name":  e.last_name,
                 "middle_name": e.middle_name or "",
@@ -89,6 +299,19 @@ def confirm_delete_emp(emp_ids: list[int], name: str, on_success=None):
 def open_edit_dialog(emp: dict, on_success):
     companies = _get_companies()
     form = {}
+    custom_sched_state = {}
+    if emp.get("custom_schedule"):
+        try: custom_sched_state.update(json.loads(emp.get("custom_schedule")))
+        except: pass
+        
+    default_state = {
+        "work_start": emp.get("work_start") or "08:00 AM",
+        "break_out_1": emp.get("break_out_1") or "12:00 PM",
+        "break_in_1": emp.get("break_in_1") or "01:00 PM",
+        "break_out_2": emp.get("break_out_2") or "04:00 PM",
+        "break_in_2": emp.get("break_in_2") or "04:30 PM",
+        "work_end": emp.get("work_end") or "07:00 PM",
+    }
 
     def content(dialog):
         with ui.element("div").classes("grid-cols-2"):
@@ -110,6 +333,14 @@ def open_edit_dialog(emp: dict, on_success):
                 value=emp.get("schedule_type", "Mon-Sat"), 
                 label="Work Schedule *"
             ).props("outlined dense").style("width:100%;")
+            
+        
+
+            
+        sched_dlg = render_custom_schedule_dialog(custom_sched_state, default_state, emp_name=f"{emp.get('first_name', '')} {emp.get('last_name', '')}")
+        
+        with ui.element("div").classes("w-full mt-2"):
+            ui.button("Customize Schedule", on_click=sched_dlg.open, icon="calendar_month").props("unelevated color=primary size=md").classes("w-full font-bold rounded-lg shadow-sm")
 
     def on_submit(dialog):
         db = SessionLocal()
@@ -123,6 +354,13 @@ def open_edit_dialog(emp: dict, on_success):
             emp_obj.department = form["department"].value.strip() or None
             emp_obj.position = form["position"].value.strip() or None
             emp_obj.schedule_type = form["schedule"].value
+            emp_obj.work_start = default_state.get("work_start")
+            emp_obj.break_out_1 = default_state.get("break_out_1")
+            emp_obj.break_in_1 = default_state.get("break_in_1")
+            emp_obj.break_out_2 = default_state.get("break_out_2")
+            emp_obj.break_in_2 = default_state.get("break_in_2")
+            emp_obj.work_end = default_state.get("work_end")
+            emp_obj.custom_schedule = json.dumps(custom_sched_state) if custom_sched_state else None
             
             db.commit()
             toast_success("Employee Updated", f"{emp_obj.last_name}, {emp_obj.first_name} has been updated.")
@@ -171,6 +409,15 @@ def employees_page():
         def open_add_dialog():
             companies = _get_companies()
             form = {}
+            custom_sched_state = {}
+            default_state = {
+                "work_start": "08:00 AM",
+                "break_out_1": "12:00 PM",
+                "break_in_1": "01:00 PM",
+                "break_out_2": "04:00 PM",
+                "break_in_2": "04:30 PM",
+                "work_end": "07:00 PM",
+            }
     
             def content(dialog):
                 with ui.element("div").classes("grid-cols-2"):
@@ -192,6 +439,12 @@ def employees_page():
                         value="Mon-Sat", 
                         label="Work Schedule *"
                     ).props("outlined dense").style("width:100%;")
+                    
+                
+
+                sched_dlg = render_custom_schedule_dialog(custom_sched_state, default_state)
+                with ui.element("div").classes("w-full mt-2"):
+                    ui.button("Customize Schedule", on_click=sched_dlg.open, icon="calendar_month").props("unelevated color=primary size=md").classes("w-full font-bold rounded-lg shadow-sm")
     
             def on_submit(dialog):
                 db = SessionLocal()
@@ -217,6 +470,13 @@ def employees_page():
                             existing.department = form["department"].value.strip() or None
                             existing.position = form["position"].value.strip() or None
                             existing.schedule_type = form["schedule"].value
+                            existing.work_start = default_state.get("work_start")
+                            existing.break_out_1 = default_state.get("break_out_1")
+                            existing.break_in_1 = default_state.get("break_in_1")
+                            existing.break_out_2 = default_state.get("break_out_2")
+                            existing.break_in_2 = default_state.get("break_in_2")
+                            existing.work_end = default_state.get("work_end")
+                            existing.custom_schedule = json.dumps(custom_sched_state) if custom_sched_state else None
                             existing.is_active = True
                             emp = existing
                     else:
@@ -229,6 +489,13 @@ def employees_page():
                             department=form["department"].value.strip() or None,
                             position=form["position"].value.strip() or None,
                             schedule_type=form["schedule"].value,
+                            work_start=default_state.get("work_start"),
+                            break_out_1=default_state.get("break_out_1"),
+                            break_in_1=default_state.get("break_in_1"),
+                            break_out_2=default_state.get("break_out_2"),
+                            break_in_2=default_state.get("break_in_2"),
+                            work_end=default_state.get("work_end"),
+                            custom_schedule=json.dumps(custom_sched_state) if custom_sched_state else None,
                             is_active=True
                         )
                         db.add(emp)

@@ -70,10 +70,17 @@ def preview_page(request=None, is_public=False):
         db.close()
 
     # Summary totals (Keeping these in case they are needed elsewhere)
-    total_days      = len([e for e in dtr_entries if e.get("time_in")])
-    total_absents   = sum(1 for e in dtr_entries if not e.get("time_in") and e.get("remarks") != "Rest Day")
+    def has_any_punch(e):
+        return any(e.get(k) for k in ["time_in", "break_out_1", "break_in_1", "break_out_2", "break_in_2", "time_out"])
+
+    total_days      = sum(1 for e in dtr_entries if has_any_punch(e))
+    # Count as absent if no punches and not marked as Rest Day. (Assuming the backend populates "Absent" in remarks if truly absent)
+    # But wait, the user's remarks might be blanked out later, but right here we still have the raw DTR dict.
+    # Actually, dtr_service sets remarks to "Absent" if there are no logs and it's not a rest day.
+    total_absents   = sum(1 for e in dtr_entries if not has_any_punch(e) and e.get("remarks") == "Absent")
     total_late      = sum(1 for e in dtr_entries if e.get("is_late"))
     total_late_mins = sum(e.get("late_minutes") or 0 for e in dtr_entries)
+    total_undertime_hrs = sum(e.get("undertime_minutes") or 0 for e in dtr_entries) / 60.0
 
     def render_content():
         ui.add_head_html('''
@@ -89,22 +96,61 @@ def preview_page(request=None, is_public=False):
             border-radius: 8px;
             overflow: hidden;
         }
-        @page { margin: 0.5in; }
+        @page { margin: 0; }
         @media print { 
             .no-print { display: none !important; }
-            .preview-card, .preview-card-body, .page-area, .nicegui-content, .preview-table-wrapper, .q-page-container, .q-page, .q-layout { 
-                box-shadow: none !important; 
-                border: none !important; 
-                background: transparent !important; 
-                border-radius: 0 !important;
-                margin: 0 !important;
-                max-width: none !important;
-                width: 100% !important;
-                padding: 0 !important;
-                min-height: 0 !important;
+            
+            /* Hide default headers/footers by setting page margin to 0 */
+            @page { margin: 0 !important; }
+            
+            /* Remove all background colors and shadows from layout wrappers */
+            body, html, #q-app, .q-layout, .q-page-container, .q-page, .page-area, .nicegui-content {
+                background: white !important;
+                background-color: white !important;
+                box-shadow: none !important;
+                border: none !important;
             }
-            body, html { background: white !important; padding: 0 !important; margin: 0 !important; }
-            .q-drawer, .q-header { display: none !important; }
+            
+            /* Add our custom margin back via padding on the q-page wrapper */
+            .q-page {
+                padding: 0.5in !important;
+                box-sizing: border-box !important;
+                width: 100% !important;
+            }
+            
+            /* Ensure the card itself doesn't have borders or weird margins in print */
+            .preview-card {
+                border: none !important;
+                box-shadow: none !important;
+                margin: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+            
+            /* Keep the internal padding so the text doesn't touch the edges */
+            .preview-card-body {
+                padding: 0 !important; /* we remove padding here since q-page has it */
+            }
+            
+            /* Force the red rows to print their background */
+            .preview-table tr.absent-row td {
+                background-color: #fef2f2 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            .preview-table tr.late-row td {
+                background-color: #fff7ed !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            
+            /* Reset table rows to white to avoid gray striping */
+            .preview-table tr:nth-child(even) {
+                background: white !important;
+            }
+            .preview-table tr {
+                background: white !important;
+            }
         }
         .preview-table {
             width: 100%;
@@ -130,6 +176,12 @@ def preview_page(request=None, is_public=False):
         }
         .preview-table tr:nth-child(even) {
             background: #F8FAFC;
+        }
+        .preview-table tr.absent-row td {
+            background-color: #fef2f2 !important;
+        }
+        .preview-table tr.late-row td {
+            background-color: #fff7ed !important;
         }
         </style>
         ''')
@@ -185,11 +237,11 @@ def preview_page(request=None, is_public=False):
                 table_html += '</tr></thead><tbody>'
 
                 for entry in dtr_entries:
-                    row_bg = ""
-                    if not entry.get("time_in"):
-                        row_bg = "background:rgba(239,68,68,.04);"
+                    row_class = ""
+                    if entry.get("remarks") == "Absent":
+                        row_class = "absent-row"
                     elif entry.get("is_late"):
-                        row_bg = "background:rgba(245,158,11,.04);"
+                        row_class = "late-row"
 
                     d: date = entry["date"]
                     day_full = d.strftime("%A")
@@ -199,7 +251,7 @@ def preview_page(request=None, is_public=False):
                         if not val or val == "None": return ""
                         return val
 
-                    table_html += f'<tr style="{row_bg}">'
+                    table_html += f'<tr class="{row_class}">'
                     table_html += f'<td style="text-align:left; padding-left:10px;">{day_full}</td>'
                     table_html += f"<td>{date_str}</td>"
                     table_html += f'<td>{clean(entry.get("time_in"))}</td>'
@@ -240,7 +292,7 @@ def preview_page(request=None, is_public=False):
                 ui.html(f'''
                 <div style="margin-top:48px; padding-top:16px; border-top:1px solid #CBD5E1; font-family:'Arial', sans-serif;">
                     <div style="font-size:10px; font-weight:800; color:#475569; margin-bottom:12px; letter-spacing:0.5px;">SUMMARY OF HOURS</div>
-                    <div style="display:grid; grid-template-columns:repeat(6, 1fr); gap:12px; text-align:center;">
+                    <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:12px; text-align:center;">
                         <div style="border:1px solid #E2E8F0; padding:10px; border-radius:6px; background:#F8FAFC;">
                             <div style="font-size:16px; font-weight:900; color:#0A1931;">{total_days}</div>
                             <div style="font-size:8px; font-weight:700; color:#6B7280; margin-top:4px;">DAYS PRESENT</div>
@@ -258,11 +310,7 @@ def preview_page(request=None, is_public=False):
                             <div style="font-size:8px; font-weight:700; color:#6B7280; margin-top:4px;">LATE (MINS)</div>
                         </div>
                         <div style="border:1px solid #E2E8F0; padding:10px; border-radius:6px; background:#F8FAFC;">
-                            <div style="font-size:16px; font-weight:900; color:#10B981;">0</div>
-                            <div style="font-size:8px; font-weight:700; color:#6B7280; margin-top:4px;">TOTAL OT (HRS)</div>
-                        </div>
-                        <div style="border:1px solid #E2E8F0; padding:10px; border-radius:6px; background:#F8FAFC;">
-                            <div style="font-size:16px; font-weight:900; color:#6366F1;">0</div>
+                            <div style="font-size:16px; font-weight:900; color:#6366F1;">{total_undertime_hrs:.1f}</div>
                             <div style="font-size:8px; font-weight:700; color:#6B7280; margin-top:4px;">UNDERTIME (HRS)</div>
                         </div>
                     </div>
@@ -282,7 +330,7 @@ def preview_page(request=None, is_public=False):
         from app.theme.styles import FONT_LINK, GLOBAL_CSS, GLOBAL_JS
         ui.html(f"{FONT_LINK}<style>{GLOBAL_CSS}</style>").classes("hidden")
         ui.add_body_html(f"<script>{GLOBAL_JS}</script>")
-        ui.html("""<style>body { background: #E2E8F0 !important; }</style>""")
+        ui.html("""<style>@media screen { body { background: #E2E8F0 !important; } }</style>""")
         with ui.element("div").classes("page-area w-full max-w-full").style("padding: 40px;"):
             render_content()
     else:

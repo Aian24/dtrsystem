@@ -98,8 +98,8 @@ def generate_dtr_pdf(employee_id: int, date_from: date, date_to: date, output_pa
 
     # Summaries
     table_data.append([""] * 10)
-    present = sum(1 for e in entries if e.get("time_in"))
-    absent  = sum(1 for e in entries if not e.get("time_in"))
+    present = sum(1 for e in entries if e.get("time_in") or e.get("time_out"))
+    absent  = sum(1 for e in entries if not e.get("time_in") and not e.get("time_out") and e.get("remarks") != "Rest Day")
     late    = sum(1 for e in entries if e.get("is_late"))
     table_data.append(["", "", "", "", "", "", "", f"Present: {present}", f"Absent: {absent}", f"Late: {late}"])
 
@@ -158,8 +158,8 @@ def generate_report(
         rows = []
         for emp in employees:
             entries = compute_dtr(emp.id, date_from, date_to, db)
-            present = sum(1 for e in entries if e.get("time_in"))
-            absent  = sum(1 for e in entries if not e.get("time_in"))
+            present = sum(1 for e in entries if e.get("time_in") or e.get("time_out"))
+            absent  = sum(1 for e in entries if not e.get("time_in") and not e.get("time_out") and e.get("remarks") != "Rest Day")
             late    = sum(1 for e in entries if e.get("is_late"))
             
             if report_type == "late" and late == 0:

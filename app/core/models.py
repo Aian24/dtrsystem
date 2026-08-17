@@ -57,6 +57,13 @@ class Employee(Base):
     position:     Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     company_id:   Mapped[int]           = mapped_column(ForeignKey("companies.id"), nullable=False, index=True)
     schedule_type: Mapped[str]          = mapped_column(String(50), default="Mon-Sat")
+    work_start:    Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
+    break_out_1:   Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
+    break_in_1:    Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
+    break_out_2:   Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
+    break_in_2:    Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
+    work_end:      Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
+    custom_schedule: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     is_active:    Mapped[bool]          = mapped_column(Boolean, default=True)
     created_at:   Mapped[datetime]      = mapped_column(DateTime, default=func.now())
 
