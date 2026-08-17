@@ -41,6 +41,50 @@ def settings_page():
                     user_container = ui.element("div")
                     table_state_users = {"search": "", "page": 1, "limit": 5}
 
+
+                    def delete_selected_users(user_ids, on_success):
+                        db = SessionLocal()
+                        try:
+                            # Do not allow deleting user id 1 or username 'admin'
+                            admins = db.query(User).filter(User.id.in_(user_ids)).all()
+                            for a in admins:
+                                if a.id == 1 or a.username == 'admin':
+                                    toast_error("Cannot Delete", "The default admin account cannot be deleted.")
+                                    return
+
+                            db.query(User).filter(User.id.in_(user_ids)).delete(synchronize_session=False)
+                            db.commit()
+                            toast_success("Users Deleted", f"{len(user_ids)} user(s) removed.")
+                            if on_success:
+                                on_success()
+                        except Exception as e:
+                            db.rollback()
+                            toast_error("Error", str(e))
+                        finally:
+                            db.close()
+
+                    def confirm_delete_users(user_ids, on_success):
+                        with ui.dialog().classes('backdrop-blur-sm') as dialog:
+                            dialog.props('persistent')
+                            with ui.card().style("width: 450px; max-width: 90vw; padding: 24px; border-radius: 16px;"):
+                                ui.html(f'''
+                                <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                                    <div style="width:40px;height:40px;border-radius:50%;background:rgba(239, 68, 68, 0.1);display:flex;align-items:center;justify-content:center;color:#ef4444;">
+                                        <span class="material-icons-round" style="font-size:24px;">delete</span>
+                                    </div>
+                                    <div style="font-size:18px;font-weight:600;color:var(--text-primary);">Delete User(s)</div>
+                                </div>
+                                <div style="font-size:14px;color:var(--text-secondary);margin-bottom:24px;line-height:1.5;">
+                                    Are you sure you want to delete {len(user_ids)} user(s)?<br><br>
+                                    This action cannot be undone.
+                                </div>
+                                ''')
+                                
+                                with ui.row().classes("w-full justify-end"):
+                                    ui.button("Cancel", on_click=dialog.close).classes("btn btn-secondary")
+                                    ui.button("Delete Permanently", on_click=lambda: [dialog.close(), delete_selected_users(user_ids, on_success)]).classes("btn").style("background-color: #ef4444 !important; color: white !important;")
+                        dialog.open()
+
                     def render_users():
                         user_container.clear()
                         with user_container:
@@ -49,6 +93,45 @@ def settings_page():
                                 users2 = db2.query(User).all()
                             finally:
                                 db2.close()
+                                
+                            selected_users = set()
+                            checkboxes = []
+
+                            def handle_success():
+                                render_users()
+
+                            def toggle_user(uid, checked):
+                                if checked: selected_users.add(uid)
+                                else: selected_users.discard(uid)
+                                update_bulk_actions()
+
+                            def toggle_all(e):
+                                if e.value:
+                                    selected_users.update(u.id for u in users2 if u.username != 'admin' and u.id != 1)
+                                else:
+                                    selected_users.clear()
+                                for cb in checkboxes:
+                                    cb.set_value(e.value)
+                                update_bulk_actions()
+
+                            def trigger_bulk_delete():
+                                if not selected_users: return
+                                confirm_delete_users(list(selected_users), handle_success)
+                                
+                            with ui.element("div").style("display: flex; justify-content: space-between; align-items: center; min-height: 56px;"):
+                                ui.html(f'<span class="card-title" style="font-size: 16px;">Directory</span>')
+                                
+                                bulk_actions = ui.element("div").style("display: none;")
+                                with bulk_actions:
+                                    bulk_btn = ui.button("Delete Selected", icon="delete", on_click=trigger_bulk_delete)
+                                    bulk_btn.props("size=sm").style("background-color: #ef4444 !important; color: white !important;")
+
+                            def update_bulk_actions():
+                                if len(selected_users) > 0:
+                                    bulk_actions.style("display: block;")
+                                    bulk_btn.set_text(f"Delete Selected ({len(selected_users)})")
+                                else:
+                                    bulk_actions.style("display: none;")
 
                             with ui.element("div").style("margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;"):
                                 with ui.element("div").style("display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted);"):
@@ -83,6 +166,8 @@ def settings_page():
                                 end_idx = start_idx + table_state_users["limit"]
                                 paged_users = filtered_users[start_idx:end_idx]
                                 
+                                checkboxes.clear()
+                                
                                 if not filtered_users:
                                     ui.html('''
                                 <div class="empty-state" style="padding:30px;">
@@ -90,11 +175,26 @@ def settings_page():
                                 </div>
                                 ''')
                                 else:
+                                    with ui.element("div").style("display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border);"):
+                                        ui.checkbox(on_change=toggle_all).props("dense").style("margin-right:4px;")
+                                        ui.html('<div style="font-size:13px;font-weight:700;color:var(--text-muted);flex:1;">USER INFO</div>')
+                                        ui.html('<div style="font-size:13px;font-weight:700;color:var(--text-muted);width:80px;text-align:center;">STATUS</div>')
+                                        ui.html('<div style="font-size:13px;font-weight:700;color:var(--text-muted);width:40px;text-align:right;">ACTION</div>')
+                                        
                                     for u in paged_users:
                                         with ui.element("div").style(
                                             "display:flex;align-items:center;gap:12px;"
                                             "padding:12px 0;border-bottom:1px solid var(--border);"
                                         ):
+                                            is_admin_user = (u.username == 'admin' or u.id == 1)
+                                            
+                                            with ui.element("div"):
+                                                if not is_admin_user:
+                                                    cb = ui.checkbox(value=u.id in selected_users, on_change=lambda e, uid=u.id: toggle_user(uid, e.value)).props("dense")
+                                                    checkboxes.append(cb)
+                                                else:
+                                                    ui.checkbox().props("dense disable")
+                                            
                                             if getattr(u, 'avatar_base64', None):
                                                 ui.html(f'''
                                                 <div style="width:36px;height:36px;border-radius:50%;overflow:hidden;
@@ -117,7 +217,9 @@ def settings_page():
                                               <div style="font-size:13.5px;font-weight:600;color:var(--text-primary);">{u.full_name or u.username}</div>
                                               <div style="font-size:12px;color:var(--text-muted);">{u.username} &middot; {u.role.title()}</div>
                                             </div>
-                                            <span class="badge badge-{"success" if u.is_active else "gray"}">{("Active" if u.is_active else "Inactive")}</span>
+                                            <div style="width:80px;text-align:center;">
+                                                <span class="badge badge-{"success" if u.is_active else "gray"}">{("Active" if u.is_active else "Inactive")}</span>
+                                            </div>
                                             ''')
                                         
                                             def open_edit_user(user_id=u.id):
@@ -168,9 +270,10 @@ def settings_page():
                                                     form_dialog(f"Edit User: {user_to_edit.username}", content, on_submit, "Save Changes")
                                                 finally:
                                                     db_edit.close()
-
-                                            with ui.element("button").classes("icon-btn").on("click", lambda _, uid=u.id: open_edit_user(uid)):
-                                                ui.html('<span class="material-icons-round" style="font-size:16px;">edit</span>')
+                                                    
+                                            with ui.element("div").style("width:40px;text-align:right;"):
+                                                with ui.element("button").classes("icon-btn").on("click", lambda _, uid=u.id: open_edit_user(uid)):
+                                                    ui.html('<span class="material-icons-round" style="font-size:16px;">edit</span>')
 
                                     with ui.element("div").style("padding-top: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;"):
                                         showing_start = start_idx + 1 if total_items > 0 else 0
@@ -183,7 +286,7 @@ def settings_page():
                                         
                                         ui.pagination(1, total_pages, value=table_state_users["page"], on_change=update_upage).props('color="primary" outline active-color="primary" active-text-color="white"')
 
-                                table_content()
+                            table_content()
                     
                     render_users()
                     ui.element("div").classes("separator")
@@ -195,7 +298,7 @@ def settings_page():
                             form["username"]  = ui.input("Username *").props("outlined dense").style("width:100%;margin-bottom:12px;")
                             form["full_name"] = ui.input("Full Name").props("outlined dense").style("width:100%;margin-bottom:12px;")
                             form["password"]  = ui.input("Password *", password=True, password_toggle_button=True).props("outlined dense").style("width:100%;margin-bottom:12px;")
-                            form["role"] = ui.select({"admin": "Admin", "hr": "HR Staff", "viewer": "Viewer"}, label="Role", value="hr").props("outlined dense").style("width:100%;")
+                            form["role"] = ui.select({"admin": "Admin", "hr": "HR"}, label="Role", value="hr").props("outlined dense").style("width:100%;")
 
                         def on_submit(dialog):
                             db2 = SessionLocal()
