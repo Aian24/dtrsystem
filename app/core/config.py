@@ -30,7 +30,7 @@ DATABASE_URL = f"sqlite:///{DATABASE_DIR / 'dtr.db'}"
 # ─── App Info ────────────────────────────────────────────────────────────────
 APP_NAME = "DTR Management System"
 APP_VERSION = "1.0.0"
-APP_HOST = "0.0.0.0"
+APP_HOST = "127.0.0.1"
 APP_PORT = 8765
 
 # ─── Theme Colors ────────────────────────────────────────────────────────────

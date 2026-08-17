@@ -109,8 +109,37 @@ def portal_page():
         ''')
 
         # Card
-        with ui.element("div").classes("glass-card").style("width: 100%; max-width: 440px; padding: 32px 24px; margin: 0 auto;"):
+        with ui.element("div").classes("glass-card").style("position: relative; width: 100%; max-width: 720px; padding: 32px 24px; margin: 0 auto;"):
             
+            # Admin Link (Badge)
+            ui.html('''
+            <a href="/login" style="
+                position: absolute;
+                top: 16px;
+                right: 16px;
+                display: inline-flex; 
+                align-items: center; 
+                gap: 4px;
+                color: #94a3b8; 
+                font-size: 11px; 
+                text-decoration: none; 
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                padding: 4px 10px;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 8px;
+                background: rgba(0, 0, 0, 0.2);
+                transition: all 0.3s ease;
+                backdrop-filter: blur(10px);
+                z-index: 10;
+            " onmouseover="this.style.background='rgba(255, 255, 255, 0.1)'; this.style.color='#ffffff';" 
+               onmouseout="this.style.background='rgba(0, 0, 0, 0.2)'; this.style.color='#94a3b8';">
+              <span class="material-icons-round" style="font-size:14px;">admin_panel_settings</span>
+              Admin
+            </a>
+            ''')
+
             # Header
             from app.services.settings_service import get_app_config
             cfg = get_app_config()
@@ -150,36 +179,42 @@ def portal_page():
             companies = get_companies()
 
             # Form elements
-            ui.html('<div style="color:#E2E8F0;font-size:12px;font-weight:700;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;">Company</div>')
-            company_sel = ui.select(
-                options={0: "— Select Company —", **companies},
-                value=0,
-            ).classes("glass-input").props('dark standout').style("width:100%;margin-bottom:20px;")
-            with company_sel.add_slot('prepend'):
-                ui.icon('business', color='white')
+            with ui.element("div").style("display: flex; gap: 16px; margin-bottom: 20px; width: 100%;"):
+                with ui.element("div").style("flex: 1;"):
+                    ui.html('<div style="color:#E2E8F0;font-size:12px;font-weight:700;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;">Company</div>')
+                    company_sel = ui.select(
+                        options={0: "— Select Company —", **companies},
+                        value=0,
+                    ).classes("glass-input").props('dark standout').style("width:100%;")
+                    with company_sel.add_slot('prepend'):
+                        ui.icon('business', color='white')
 
-            ui.html('<div style="color:#E2E8F0;font-size:12px;font-weight:700;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;">Cutoff Rule</div>')
-            cutoff_sel = ui.select(
-                options={0: "— Select Cutoff —"},
-                value=0,
-            ).classes("glass-input").props('dark standout').style("width:100%;margin-bottom:20px;")
-            with cutoff_sel.add_slot('prepend'):
-                ui.icon('date_range', color='white')
+                with ui.element("div").style("flex: 1;"):
+                    ui.html('<div style="color:#E2E8F0;font-size:12px;font-weight:700;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;">Cutoff Rule</div>')
+                    cutoff_sel = ui.select(
+                        options={0: "— Select Cutoff —"},
+                        value=0,
+                    ).classes("glass-input").props('dark standout').style("width:100%;")
+                    with cutoff_sel.add_slot('prepend'):
+                        ui.icon('date_range', color='white')
 
             from datetime import datetime
-            ui.html('<div style="color:#E2E8F0;font-size:12px;font-weight:700;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;">Month</div>')
-            month_input = ui.input(
-                value=datetime.now().strftime("%Y-%m")
-            ).classes("glass-input").props('type="month" dark standout').style("width:100%;margin-bottom:20px;cursor:pointer;")
-            with month_input.add_slot('prepend'):
-                ui.icon('calendar_month', color='white')
+            with ui.element("div").style("display: flex; gap: 16px; margin-bottom: 32px; width: 100%;"):
+                with ui.element("div").style("flex: 1;"):
+                    ui.html('<div style="color:#E2E8F0;font-size:12px;font-weight:700;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;">Month</div>')
+                    month_input = ui.input(
+                        value=datetime.now().strftime("%Y-%m")
+                    ).classes("glass-input").props('type="month" dark standout').style("width:100%;cursor:pointer;")
+                    with month_input.add_slot('prepend'):
+                        ui.icon('calendar_month', color='white')
 
-            ui.html('<div style="color:#E2E8F0;font-size:12px;font-weight:700;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;">Employee ID Number</div>')
-            emp_id_input = ui.input(
-                placeholder="Enter your ID Number"
-            ).classes("glass-input").props('dark standout').style("width:100%;margin-bottom:32px;")
-            with emp_id_input.add_slot('prepend'):
-                ui.icon('badge', color='white')
+                with ui.element("div").style("flex: 1;"):
+                    ui.html('<div style="color:#E2E8F0;font-size:12px;font-weight:700;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;">Employee ID Number</div>')
+                    emp_id_input = ui.input(
+                        placeholder="Enter your ID Number"
+                    ).classes("glass-input").props('dark standout').style("width:100%;")
+                    with emp_id_input.add_slot('prepend'):
+                        ui.icon('badge', color='white')
 
             def on_company_change(e):
                 try:
@@ -244,7 +279,7 @@ def portal_page():
                 generate_btn = ui.button(
                     "Generate DTR", 
                     on_click=do_generate,
-                    icon="arrow_forward"
+                    icon="description"
                 ).props('unelevated text-color="white"').style(
                     "width:100%; height:54px; font-size:16px; font-weight:800; "
                     "border-radius:12px; letter-spacing:1px; text-transform:uppercase; "
@@ -253,11 +288,4 @@ def portal_page():
                     "transition: all 0.3s ease;"
                 )
 
-            # Admin Link
-            ui.html('''
-            <div style="text-align:center;margin-top:32px;">
-              <a href="/login" style="color:#CBD5E1;font-size:13px;text-decoration:none;transition:color 0.2s;font-weight:600;">
-                <span class="material-icons-round" style="font-size:14px;vertical-align:middle;margin-right:4px;">admin_panel_settings</span>Admin Login
-              </a>
-            </div>
-            ''')
+
