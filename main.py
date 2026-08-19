@@ -41,6 +41,7 @@ from app.pages.preview    import preview_page
 from app.pages.reports    import reports_page
 from app.pages.settings   import settings_page
 from app.pages.manage_logs import manage_logs_page
+from app.pages.users      import users_page
 
 # ── NiceGUI App Config ─────────────────────────────────────────────────────────
 SECRET_KEY = "dtr-sys-2025-secret-key-change-me"
@@ -141,6 +142,13 @@ def route_settings():
     if not get_current_user():
         ui.navigate.to("/login"); return
     settings_page()
+
+
+@ui.page("/users")
+def route_users():
+    if not get_current_user():
+        ui.navigate.to("/login"); return
+    users_page()
 
 
 @ui.page("/logout")

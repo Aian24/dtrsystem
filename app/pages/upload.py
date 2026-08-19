@@ -36,16 +36,21 @@ def upload_page():
             top: 0;
             left: 0;
             width: 100%;
-            height: 280px;
+            height: 180px;
             z-index: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            border: 2px dashed var(--border);
-            border-radius: 12px;
-            background: var(--surface);
+            border: 2px dashed #CBD5E1;
+            border-radius: 16px;
+            background: #F8FAFC;
             transition: all 0.2s ease;
+        }
+        
+        .upload-zone:hover {
+            border-color: var(--color-primary);
+            background: #EFF6FF;
         }
         
         .my-uploader {
@@ -54,21 +59,25 @@ def upload_page():
             background: transparent !important;
             width: 100% !important;
             box-shadow: none !important;
+            max-height: none !important;
         }
 
         /* Make the header invisible but perfectly sized to cover the upload-zone */
         .my-uploader .q-uploader__header {
             opacity: 0.001 !important;
-            height: 280px !important;
+            height: 180px !important;
+            min-height: 180px !important;
+            max-height: 180px !important;
             position: relative !important; /* containing block for the stretched input */
             background: transparent !important;
+            flex-shrink: 0 !important;
         }
 
         /* Break out of inner constraints so input can fill the header */
-        .my-uploader .q-btn,
-        .my-uploader .q-btn__content,
-        .my-uploader .q-focus-helper,
-        .my-uploader .q-icon {
+        .my-uploader .q-uploader__header .q-btn,
+        .my-uploader .q-uploader__header .q-btn__content,
+        .my-uploader .q-uploader__header .q-focus-helper,
+        .my-uploader .q-uploader__header .q-icon {
             position: static !important;
             transform: none !important;
             overflow: visible !important;
@@ -97,25 +106,44 @@ def upload_page():
             padding: 0 !important;
             border: none !important;
             margin-top: 16px !important;
+            display: grid !important;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)) !important;
+            gap: 16px !important;
         }
         
         .my-uploader .q-uploader__file {
             background: #ffffff !important;
             border: 1px solid var(--border) !important;
-            border-radius: 8px !important;
-            padding: 12px 16px !important;
-            margin-bottom: 8px !important;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
+            border-radius: 12px !important;
+            padding: 16px !important;
+            margin-bottom: 0 !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05) !important;
             display: flex !important;
             align-items: center !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+        
+        .my-uploader .q-uploader__file:hover {
+            border-color: var(--color-primary) !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1) !important;
         }
         
         .my-uploader .q-uploader__file::before {
             content: "\\e873"; /* material icon for 'description' */
-            font-family: "Material Icons Round", "Material Icons";
-            font-size: 24px;
-            color: var(--color-primary);
+            font-family: "Material Icons Round", "Material Icons" !important;
+            font-size: 22px;
+            color: #fff;
+            background: linear-gradient(135deg, #3B82F6, #2563EB);
+            border-radius: 10px;
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             margin-right: 16px;
+            flex-shrink: 0;
+            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
         }
 
         .my-uploader .q-uploader__file-header {
@@ -128,26 +156,46 @@ def upload_page():
         
         .my-uploader .q-uploader__file-header-content {
             padding-right: 16px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            flex-grow: 1 !important;
         }
 
         .my-uploader .q-uploader__title {
-            font-weight: 500 !important;
+            font-weight: 600 !important;
             color: var(--text-primary) !important;
-            font-size: 14px !important;
-            margin-bottom: 0 !important;
+            font-size: 14.5px !important;
+            margin-bottom: 4px !important;
+            line-height: 1.2 !important;
         }
 
         .my-uploader .q-uploader__subtitle {
-            display: none !important; /* Hide the size/progress text */
+            display: block !important;
+            font-size: 12.5px !important;
+            color: var(--text-muted) !important;
+            font-weight: 500 !important;
         }
         
         /* Style the delete button */
         .my-uploader .q-uploader__file .q-btn {
             color: var(--text-muted) !important;
-            transition: color 0.2s;
+            background: #F1F5F9 !important;
+            border-radius: 50% !important;
+            width: 36px !important;
+            height: 36px !important;
+            min-height: 36px !important;
+            padding: 0 !important;
+            transition: all 0.2s ease !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
         }
+        
         .my-uploader .q-uploader__file .q-btn:hover {
-            color: #ef4444 !important;
+            color: #EF4444 !important;
+            background: #FEE2E2 !important;
+            transform: rotate(90deg) !important;
         }
 
         /* Remove the Quasar grey background for file items */
@@ -292,18 +340,18 @@ def upload_page():
                             # The Beautiful UI
                             ui.html(f'''
                             <div class="upload-zone" id="upload-zone">
-                              <div class="upload-icon">
-                                <span class="material-icons-round">{IC.DRAG_DROP}</span>
+                              <div style="width: 56px; height: 56px; border-radius: 50%; background: #DBEAFE; color: #2563EB; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.1);">
+                                <span class="material-icons-round" style="font-size: 28px;">{IC.DRAG_DROP}</span>
                               </div>
-                              <div style="font-size:16px;font-weight:600;color:var(--text-primary);margin-bottom:8px;">
-                                Drag & drop your log file here
+                              <div style="font-size: 18px; font-weight: 700; color: #0F172A; margin-bottom: 6px;">
+                                Drag & drop logs here
                               </div>
-                              <div style="color:var(--text-muted);font-size:13.5px;margin-bottom:20px;">
-                                or click to browse — supports <strong>.log</strong>, <strong>.txt</strong>, <strong>.csv</strong>
+                              <div style="color: #64748B; font-size: 14px; margin-bottom: 24px;">
+                                or click to browse files (.log, .txt, .csv)
                               </div>
-                              <div class="btn btn-primary" style="display:inline-flex;">
-                                <span class="material-icons-round" style="font-size:16px;">{IC.UPLOAD}</span>
-                                Browse File
+                              <div class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px; padding: 12px 32px; font-size: 15px; font-weight: 600; border-radius: 100px; box-shadow: 0 4px 12px rgba(37,99,235,0.3); pointer-events: none;">
+                                <span class="material-icons-round" style="font-size: 20px;">{IC.UPLOAD}</span>
+                                Select Files
                               </div>
                             </div>
                             ''')

@@ -107,7 +107,14 @@ def lookup_page():
                         # Cutoff section (hidden by default)
                         cutoff_section = ui.element("div").style("display:none;")
                         cutoff_sel = None
+                        month_sel = None
                         with cutoff_section:
+                            ui.html('<div class="form-label">Cutoff Month</div>')
+                            month_sel = ui.input(
+                                value=date.today().strftime("%Y-%m"),
+                                placeholder="YYYY-MM"
+                            ).props("outlined dense type=month").style("width:100%;margin-bottom:10px;")
+
                             ui.html('<div class="form-label">Cutoff Period</div>')
                             cutoff_sel = ui.select(
                                 options={"": "— Select Cutoff —"},
@@ -167,7 +174,10 @@ def lookup_page():
                             # Navigate to preview with query params
                             params = f"emp={form_state['employee_id']}"
                             if form_state["cutoff_id"]:
-                                params += f"&cutoff={form_state['cutoff_id']}"
+                                if not month_sel.value:
+                                    toast_error("No Month", "Please select a cutoff month.")
+                                    return
+                                params += f"&cutoff={form_state['cutoff_id']}&month={month_sel.value}"
                             else:
                                 params += f"&from={form_state['date_from']}&to={form_state['date_to']}"
                             ui.navigate.to(f"/preview?{params}")

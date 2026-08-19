@@ -34,38 +34,53 @@ def get_app_config() -> Dict[str, Any]:
         
         return {
             "app_name": config_map.get("app_name") or DEFAULT_APP_NAME,
-            "app_logo": config_map.get("app_logo") or _cached_default_logo
+            "app_logo": config_map.get("app_logo") or _cached_default_logo,
+            "grace_period_mins": int(config_map.get("grace_period_mins") or 15),
+            "standard_work_hours": int(config_map.get("standard_work_hours") or 8),
+            "enable_overtime": config_map.get("enable_overtime") == "True",
+            "auto_deduct_lunch_mins": int(config_map.get("auto_deduct_lunch_mins") or 60)
         }
     except Exception as e:
         print(f"Error fetching app config: {e}")
         return {
             "app_name": DEFAULT_APP_NAME,
-            "app_logo": _cached_default_logo
+            "app_logo": _cached_default_logo,
+            "grace_period_mins": 15,
+            "standard_work_hours": 8,
+            "enable_overtime": False,
+            "auto_deduct_lunch_mins": 60
         }
     finally:
         db.close()
 
 
-def update_app_config(app_name: str, app_logo_base64: Optional[str] = None) -> bool:
-    """Update app name and optionally app logo base64 string in DB."""
+def update_app_config(
+    app_name: str, 
+    app_logo_base64: Optional[str] = None, 
+    grace_period_mins: int = 15, 
+    standard_work_hours: int = 8,
+    enable_overtime: bool = False,
+    auto_deduct_lunch_mins: int = 60
+) -> bool:
+    """Update app config including name, logo, and rules in DB."""
     db = SessionLocal()
     try:
-        # Update or create app_name
-        name_setting = db.query(AppSetting).filter(AppSetting.key == "app_name").first()
-        if not name_setting:
-            name_setting = AppSetting(key="app_name", value=app_name.strip())
-            db.add(name_setting)
-        else:
-            name_setting.value = app_name.strip()
-            
-        # Update or create app_logo if provided
-        if app_logo_base64 is not None:
-            logo_setting = db.query(AppSetting).filter(AppSetting.key == "app_logo").first()
-            if not logo_setting:
-                logo_setting = AppSetting(key="app_logo", value=app_logo_base64)
-                db.add(logo_setting)
+        def upsert_setting(key, value):
+            setting = db.query(AppSetting).filter(AppSetting.key == key).first()
+            if not setting:
+                setting = AppSetting(key=key, value=str(value))
+                db.add(setting)
             else:
-                logo_setting.value = app_logo_base64
+                setting.value = str(value)
+
+        upsert_setting("app_name", app_name.strip())
+        upsert_setting("grace_period_mins", grace_period_mins)
+        upsert_setting("standard_work_hours", standard_work_hours)
+        upsert_setting("enable_overtime", enable_overtime)
+        upsert_setting("auto_deduct_lunch_mins", auto_deduct_lunch_mins)
+        
+        if app_logo_base64 is not None:
+            upsert_setting("app_logo", app_logo_base64)
                 
         db.commit()
         return True

@@ -337,7 +337,7 @@ def open_edit_dialog(emp: dict, on_success):
         
 
             
-        sched_dlg = render_custom_schedule_dialog(custom_sched_state, default_state, emp_name=f"{emp.get('first_name', '')} {emp.get('last_name', '')}")
+        sched_dlg = render_custom_schedule_dialog(custom_sched_state, default_state, emp_name="New Employee")
         
         with ui.element("div").classes("w-full mt-2"):
             ui.button("Customize Schedule", on_click=sched_dlg.open, icon="calendar_month").props("unelevated color=primary size=md").classes("w-full font-bold rounded-lg shadow-sm")
@@ -442,7 +442,7 @@ def employees_page():
                     
                 
 
-                sched_dlg = render_custom_schedule_dialog(custom_sched_state, default_state)
+                sched_dlg = render_custom_schedule_dialog(custom_sched_state, default_state, emp_name="New Employee")
                 with ui.element("div").classes("w-full mt-2"):
                     ui.button("Customize Schedule", on_click=sched_dlg.open, icon="calendar_month").props("unelevated color=primary size=md").classes("w-full font-bold rounded-lg shadow-sm")
     

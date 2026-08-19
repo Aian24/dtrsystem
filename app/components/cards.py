@@ -97,37 +97,38 @@ class _InfoCard:
 
 def upload_summary_card(filename: str, total: int, imported: int, duplicates: int, invalid: int):
     """Animated upload result summary card."""
-    with ui.element("div").classes("card").style(
-        "border-left: 4px solid #10B981; animation: fadeInUp .4s ease;"
-    ):
-        with ui.element("div").classes("card-header"):
-            ui.html('''
-            <div style="display:flex;align-items:center;gap:10px;">
-              <div style="width:32px;height:32px;background:linear-gradient(135deg,#10B981,#059669);
-                          border-radius:8px;display:flex;align-items:center;justify-content:center;">
-                <span class="material-icons-round" style="color:#fff;font-size:18px;">check</span>
-              </div>
-              <span class="card-title" style="color:#10B981;">Upload Successful</span>
-            </div>
-            ''')
+    with ui.element("div").style("animation: fadeInUp .4s ease; width: 100%;"):
+        # Header with animated SVG checkmark
+        ui.html('''
+        <style>
+          .success-svg { width: 56px; height: 56px; border-radius: 50%; display: block; margin: 0 auto 16px; stroke-width: 3; stroke: #fff; stroke-miterlimit: 10; box-shadow: inset 0px 0px 0px #10B981; animation: fill .4s ease-in-out .4s forwards, scale .3s ease-in-out .9s both; }
+          .success-svg circle { stroke-dasharray: 166; stroke-dashoffset: 166; stroke-width: 3; stroke-miterlimit: 10; stroke: #10B981; fill: none; animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards; }
+          .success-svg path { transform-origin: 50% 50%; stroke-dasharray: 48; stroke-dashoffset: 48; animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards; }
+          @keyframes stroke { 100% { stroke-dashoffset: 0; } }
+          @keyframes scale { 0%, 100% { transform: none; } 50% { transform: scale3d(1.1, 1.1, 1); } }
+          @keyframes fill { 100% { box-shadow: inset 0px 0px 0px 30px #10B981; } }
+        </style>
+        <div style="text-align: center; padding-bottom: 24px;">
+          <svg class="success-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+            <circle cx="26" cy="26" r="25" fill="none"/>
+            <path fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+          </svg>
+          <h2 style="margin: 0; font-size: 22px; font-weight: 700; color: #0F172A;">Upload Successful</h2>
+          <p style="margin: 6px 0 0; color: #64748B; font-size: 14px;">Processed <strong>{filename}</strong></p>
+        </div>
+        '''.replace('{filename}', filename))
 
-        with ui.element("div").classes("card-body"):
-            ui.html(f'<p style="color:var(--text-secondary);font-size:13px;margin-bottom:16px;">File: <strong>{filename}</strong></p>')
-
-            stats = [
-                ("upload_file", "Total Records",    total,      "#2563EB"),
-                ("check_circle","Records Imported", imported,   "#10B981"),
-                ("content_copy","Duplicates Skipped",duplicates,"#F59E0B"),
-                ("error",       "Invalid Records",  invalid,    "#EF4444"),
-            ]
-            with ui.element("div").style("display:grid;grid-template-columns:repeat(2,1fr);gap:12px;"):
-                for icon, lbl, val, color in stats:
-                    ui.html(f'''
-                    <div style="padding:14px;background:var(--bg-subtle);border-radius:10px;
-                                border-left:3px solid {color};">
-                      <div style="font-size:20px;font-weight:800;color:{color};
-                                  font-variant-numeric:tabular-nums;">{val:,}</div>
-                      <div style="font-size:11.5px;color:var(--text-muted);font-weight:600;
-                                  text-transform:uppercase;letter-spacing:.5px;margin-top:2px;">{lbl}</div>
-                    </div>
-                    ''')
+        stats = [
+            ("Total Records",    total,      "#2563EB", "#EFF6FF"),
+            ("Records Imported", imported,   "#10B981", "#ECFDF5"),
+            ("Duplicates Skipped",duplicates,"#F59E0B", "#FFFBEB"),
+            ("Invalid Records",  invalid,    "#EF4444", "#FEF2F2"),
+        ]
+        with ui.element("div").style("display:grid;grid-template-columns:repeat(2,1fr);gap:12px;"):
+            for lbl, val, color, bg in stats:
+                ui.html(f'''
+                <div style="padding:16px;background:{bg};border-radius:12px;text-align:center;border:1px solid rgba(0,0,0,0.03);">
+                  <div style="font-size:24px;font-weight:800;color:{color};font-variant-numeric:tabular-nums;line-height:1;">{val:,}</div>
+                  <div style="font-size:11.5px;color:var(--text-secondary);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-top:6px;">{lbl}</div>
+                </div>
+                ''')

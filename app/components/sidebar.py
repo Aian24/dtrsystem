@@ -20,6 +20,7 @@ NAV_ITEMS = [
         (IC.REPORTS,    "Reports",         "/reports"),
     ]),
     ("system", [
+        (IC.USER,       "User Accounts",   "/users"),
         (IC.SETTINGS,   "Settings",        "/settings"),
     ]),
 ]

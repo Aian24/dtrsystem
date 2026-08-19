@@ -1,34 +1,9 @@
-"""
-SQLAlchemy Database Engine & Session Management
-"""
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, DeclarativeBase
-from app.core.config import DATABASE_URL
+import re
 
+with open('app/core/database.py', 'r', encoding='utf-8') as f:
+    content = f.read()
 
-class Base(DeclarativeBase):
-    pass
-
-
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False},
-    echo=False,
-)
-
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-
-def get_db():
-    """Dependency-style DB session (use as context manager)."""
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-def init_db():
+new_init_db = '''def init_db():
     """Create all tables if they don't exist."""
     from app.core import models  # noqa: F401
     Base.metadata.create_all(bind=engine)
@@ -66,20 +41,11 @@ def init_db():
                     print(f"[OK] Migrated employees table: added {col_name} column")
                 except Exception as e:
                     print(f"[WARN] Migration error for employees.{col_name}: {e}")
-                    
-        # Migrate companies table
-        company_cols = [
-            ("work_start", "VARCHAR(5) DEFAULT '08:00'"),
-            ("work_end", "VARCHAR(5) DEFAULT '17:00'"),
-            ("area_manager", "VARCHAR(100)"),
-            ("store_supervisor", "VARCHAR(100)")
-        ]
-        for col_name, col_type in company_cols:
-            try:
-                conn.execute(text(f"SELECT {col_name} FROM companies LIMIT 1"))
-            except Exception:
-                try:
-                    conn.execute(text(f"ALTER TABLE companies ADD COLUMN {col_name} {col_type}"))
-                    print(f"[OK] Migrated companies table: added {col_name} column")
-                except Exception as e:
-                    print(f"[WARN] Migration error for companies.{col_name}: {e}")
+'''
+
+content = re.sub(r'def init_db\(\):[\s\S]*', new_init_db, content)
+
+with open('app/core/database.py', 'w', encoding='utf-8') as f:
+    f.write(content)
+
+print("Updated init_db")
