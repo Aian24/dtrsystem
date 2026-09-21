@@ -306,34 +306,35 @@ def preview_page(request=None, is_public=False):
 
                 render_signatures()
 
-                # Comprehensive Summary Block (Hidden during print)
-                ui.html(f'''
-                <div class="no-print" style="margin-top:48px; padding-top:16px; border-top:1px solid #CBD5E1; font-family:'Arial', sans-serif;">
-                    <div style="font-size:10px; font-weight:800; color:#475569; margin-bottom:12px; letter-spacing:0.5px;">SUMMARY OF HOURS</div>
-                    <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:12px; text-align:center;">
-                        <div style="border:1px solid #E2E8F0; padding:10px; border-radius:6px; background:#F8FAFC;">
-                            <div style="font-size:16px; font-weight:900; color:#0A1931;">{total_days}</div>
-                            <div style="font-size:8px; font-weight:700; color:#6B7280; margin-top:4px;">DAYS PRESENT</div>
-                        </div>
-                        <div style="border:1px solid #E2E8F0; padding:10px; border-radius:6px; background:#F8FAFC;">
-                            <div style="font-size:16px; font-weight:900; color:#EF4444;">{total_absents}</div>
-                            <div style="font-size:8px; font-weight:700; color:#6B7280; margin-top:4px;">ABSENTS</div>
-                        </div>
-                        <div style="border:1px solid #E2E8F0; padding:10px; border-radius:6px; background:#F8FAFC;">
-                            <div style="font-size:16px; font-weight:900; color:#F59E0B;">{total_late}</div>
-                            <div style="font-size:8px; font-weight:700; color:#6B7280; margin-top:4px;">DAYS LATE</div>
-                        </div>
-                        <div style="border:1px solid #E2E8F0; padding:10px; border-radius:6px; background:#F8FAFC;">
-                            <div style="font-size:16px; font-weight:900; color:#F59E0B;">{total_late_mins}</div>
-                            <div style="font-size:8px; font-weight:700; color:#6B7280; margin-top:4px;">LATE (MINS)</div>
-                        </div>
-                        <div style="border:1px solid #E2E8F0; padding:10px; border-radius:6px; background:#F8FAFC;">
-                            <div style="font-size:16px; font-weight:900; color:#6366F1;">{total_undertime_hrs:.1f}</div>
-                            <div style="font-size:8px; font-weight:700; color:#6B7280; margin-top:4px;">UNDERTIME (HRS)</div>
+                # Comprehensive Summary Block (Hidden during print and on public user portal preview)
+                if not is_public:
+                    ui.html(f'''
+                    <div class="no-print" style="margin-top:48px; padding-top:16px; border-top:1px solid #CBD5E1; font-family:'Arial', sans-serif;">
+                        <div style="font-size:10px; font-weight:800; color:#475569; margin-bottom:12px; letter-spacing:0.5px;">SUMMARY OF HOURS</div>
+                        <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:12px; text-align:center;">
+                            <div style="border:1px solid #E2E8F0; padding:10px; border-radius:6px; background:#F8FAFC;">
+                                <div style="font-size:16px; font-weight:900; color:#0A1931;">{total_days}</div>
+                                <div style="font-size:8px; font-weight:700; color:#6B7280; margin-top:4px;">DAYS PRESENT</div>
+                            </div>
+                            <div style="border:1px solid #E2E8F0; padding:10px; border-radius:6px; background:#F8FAFC;">
+                                <div style="font-size:16px; font-weight:900; color:#EF4444;">{total_absents}</div>
+                                <div style="font-size:8px; font-weight:700; color:#6B7280; margin-top:4px;">ABSENTS</div>
+                            </div>
+                            <div style="border:1px solid #E2E8F0; padding:10px; border-radius:6px; background:#F8FAFC;">
+                                <div style="font-size:16px; font-weight:900; color:#F59E0B;">{total_late}</div>
+                                <div style="font-size:8px; font-weight:700; color:#6B7280; margin-top:4px;">DAYS LATE</div>
+                            </div>
+                            <div style="border:1px solid #E2E8F0; padding:10px; border-radius:6px; background:#F8FAFC;">
+                                <div style="font-size:16px; font-weight:900; color:#F59E0B;">{total_late_mins}</div>
+                                <div style="font-size:8px; font-weight:700; color:#6B7280; margin-top:4px;">LATE (MINS)</div>
+                            </div>
+                            <div style="border:1px solid #E2E8F0; padding:10px; border-radius:6px; background:#F8FAFC;">
+                                <div style="font-size:16px; font-weight:900; color:#6366F1;">{total_undertime_hrs:.1f}</div>
+                                <div style="font-size:8px; font-weight:700; color:#6B7280; margin-top:4px;">UNDERTIME (HRS)</div>
+                            </div>
                         </div>
                     </div>
-                </div>
-                ''')
+                    ''')
 
                 # Edit Signatures Dialog Handler
                 def open_edit_signatures_dialog():
@@ -404,7 +405,8 @@ def preview_page(request=None, is_public=False):
                     with ui.element("button").classes("btn").style("background:#2563EB; color:#fff;").props('onclick="window.print()"'):
                         ui.html(f'<span class="material-icons-round" style="font-size:18px;">print</span> Print Sheet')
                     
-                    ui.button("Edit Signatures", icon="draw", on_click=open_edit_signatures_dialog).classes("btn btn-secondary").style("font-size:13px; font-weight:600; padding:8px 18px;").tooltip("Change approver names and titles on this sheet")
+                    if not is_public:
+                        ui.button("Edit Signatures", icon="draw", on_click=open_edit_signatures_dialog).classes("btn btn-secondary").style("font-size:13px; font-weight:600; padding:8px 18px;").tooltip("Change approver names and titles on this sheet")
 
                     back_route = "/" if is_public else "/lookup"
                     with ui.element("a").props(f'href="{back_route}"').classes("btn").style("background:#F8FAFC; color:#0F172A; border:1px solid #CBD5E1; text-decoration:none; display:inline-flex; align-items:center; gap:6px;"):
