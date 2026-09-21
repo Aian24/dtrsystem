@@ -1,6 +1,7 @@
 """
 Modal / Dialog Components — scale-from-center animation
 """
+from __future__ import annotations
 from nicegui import ui
 from typing import Callable
 

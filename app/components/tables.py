@@ -1,8 +1,10 @@
 """
 Searchable, Sortable, Paginated Data Table Component
 """
+from __future__ import annotations
 from nicegui import ui
 from typing import Any, Callable
+from app.components.search_select import search_select
 
 
 def data_table(
@@ -11,6 +13,7 @@ def data_table(
     row_key: str = "id",
     page_size: int = 20,
     searchable: bool = True,
+    filters: list[dict] | None = None,
     on_row_click: Callable | None = None,
     empty_icon: str = "table_rows",
     empty_message: str = "No records found",
@@ -18,12 +21,14 @@ def data_table(
     """
     columns: [{"key": "name", "label": "Full Name", "sortable": True}, ...]
     rows:    [{"id": 1, "name": "Dela Cruz, Juan"}, ...]
+    filters: [{"key": "status", "label": "Status", "options": {"all": "All Statuses", "active": "Active"}}, ...]
     """
     state = {
         "page":       1,
         "sort_key":   None,
         "sort_asc":   True,
         "search":     "",
+        "filter_vals": {f["key"]: list(f["options"].keys())[0] if f.get("options") else "" for f in (filters or [])},
         "filtered":   rows[:],
         "page_size":  page_size,
     }
@@ -32,10 +37,24 @@ def data_table(
 
     def get_filtered():
         q = state["search"].lower().strip()
-        data = rows if not q else [
-            r for r in rows
-            if any(q in str(v).lower() for v in r.values())
-        ]
+        data = rows
+        if q:
+            data = [
+                r for r in data
+                if any(q in str(v).lower() for v in r.values())
+            ]
+        # Apply dropdown filters
+        if filters:
+            for flt in filters:
+                fkey = flt["key"]
+                sel_val = state["filter_vals"].get(fkey)
+                if sel_val and str(sel_val).lower() not in ("all", "0", ""):
+                    custom_fn = flt.get("filter_fn")
+                    if custom_fn:
+                        data = [r for r in data if custom_fn(r, sel_val)]
+                    else:
+                        data = [r for r in data if str(r.get(fkey, "")).lower() == str(sel_val).lower()]
+
         sk = state["sort_key"]
         if sk:
             data = sorted(data, key=lambda r: str(r.get(sk, "")), reverse=not state["sort_asc"])
@@ -52,26 +71,58 @@ def data_table(
         page_rows = filtered[page_start: page_start + state["page_size"]]
 
         with container:
-            # ── Search bar ──────────────────────────────────────────────────
-            if searchable:
+            # ── Toolbar / Filter bar ──────────────────────────────────────────
+            if searchable or filters:
                 with ui.element("div").style(
-                    "padding:14px 18px;border-bottom:1px solid var(--border);"
-                    "display:flex;align-items:center;gap:10px;"
+                    "padding:12px 18px;border-bottom:1px solid var(--border);"
+                    "display:flex;align-items:center;gap:12px;flex-wrap:wrap;"
                 ):
-                    ui.html('<span class="material-icons-round" style="color:var(--text-muted);font-size:18px;">search</span>')
-                    search_input = ui.input(placeholder="Search…").props(
-                        'outlined dense style="flex:1;border:none;background:transparent;"'
-                    ).style(
-                        "flex:1;"
-                    )
-                    search_input.value = state["search"]
+                    if searchable:
+                        with ui.element("div").style("display:flex;align-items:center;gap:6px;flex:1;min-width:200px;"):
+                            ui.html('<span class="material-icons-round" style="color:var(--text-muted);font-size:18px;">search</span>')
+                            search_input = ui.input(placeholder="Search…").props(
+                                'outlined dense clearable style="flex:1;background:transparent;"'
+                            ).style("flex:1;")
+                            search_input.value = state["search"]
 
-                    def on_search(e):
-                        state["search"] = e.value
-                        state["page"] = 1
-                        render()
+                            def on_search(e):
+                                val = e.value if hasattr(e, 'value') else (search_input.value or "")
+                                state["search"] = val or ""
+                                state["page"] = 1
+                                render()
 
-                    search_input.on("keyup", on_search)
+                            search_input.on_value_change(on_search)
+
+                    if filters:
+                        for flt in filters:
+                            fkey = flt["key"]
+                            flbl = flt.get("label", fkey.title())
+                            fopts = flt.get("options", {})
+                            cur_val = state["filter_vals"].get(fkey, list(fopts.keys())[0] if fopts else "")
+                            
+                            def make_filter_change(key):
+                                def on_flt_change(e):
+                                    val = e.value if hasattr(e, 'value') else e
+                                    state["filter_vals"][key] = val
+                                    state["page"] = 1
+                                    render()
+                                return on_flt_change
+
+                            fsel = search_select(
+                                options=fopts,
+                                value=cur_val,
+                                label=flbl,
+                            ).props('outlined dense options-dense no-wrap').style("min-width:150px;")
+                            fsel.on_value_change(make_filter_change(fkey))
+
+                        # Reset button
+                        def on_reset():
+                            state["search"] = ""
+                            state["filter_vals"] = {f["key"]: list(f["options"].keys())[0] if f.get("options") else "" for f in (filters or [])}
+                            state["page"] = 1
+                            render()
+
+                        ui.button("Reset", icon="filter_alt_off", on_click=on_reset).classes("btn btn-reset btn-sm").tooltip("Clear filters")
 
             # ── Table ───────────────────────────────────────────────────────
             with ui.element("div").classes("data-table-wrapper").style(
@@ -81,8 +132,8 @@ def data_table(
                     with ui.element("div").classes("empty-state"):
                         ui.html(f'<span class="material-icons-round">{empty_icon}</span>')
                         ui.html(f'<div class="empty-state-title">{empty_message}</div>')
-                        if state["search"]:
-                            ui.html(f'<div class="empty-state-desc">Try adjusting your search</div>')
+                        if state["search"] or any(str(v).lower() not in ("all", "0", "") for v in state["filter_vals"].values()):
+                            ui.html(f'<div class="empty-state-desc">Try adjusting your search or filters</div>')
                 else:
                     with ui.element("table").classes("data-table"):
                         # Head
@@ -92,9 +143,10 @@ def data_table(
                                     lbl = col.get("label", col["key"].title())
                                     sortable = col.get("sortable", True)
                                     active = state["sort_key"] == col["key"]
-                                    icon = ""
+                                    sort_icon_html = ""
                                     if sortable and active:
-                                        icon = "▲" if state["sort_asc"] else "▼"
+                                        m_icon = "arrow_upward" if state["sort_asc"] else "arrow_downward"
+                                        sort_icon_html = f'<span class="material-icons-round" style="font-size:14px;vertical-align:middle;margin-left:4px;color:var(--color-primary);">{m_icon}</span>'
 
                                     def make_sort_handler(key):
                                         def handler():
@@ -108,7 +160,7 @@ def data_table(
 
                                     th = ui.element("th").on("click", make_sort_handler(col["key"]) if sortable else None)
                                     with th:
-                                        ui.html(f'{lbl} <span style="opacity:.5;font-size:10px;">{icon}</span>')
+                                        ui.html(f'{lbl}{sort_icon_html}')
 
                         # Body
                         with ui.element("tbody"):

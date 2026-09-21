@@ -1,0 +1,2596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DTR Management System — Complete User & Admin Manual</title>
+  
+  <!-- Google Fonts & Material Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons+Round">
+  
+  <style>
+    /* ==========================================================================
+       1. THEME VARIABLES & BASE RESET
+       ========================================================================== */
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-light: #eff6ff;
+      --primary-border: #bfdbfe;
+      
+      --secondary: #6366f1;
+      --secondary-light: #eef2ff;
+      
+      --success: #10b981;
+      --success-light: #ecfdf5;
+      --success-border: #a7f3d0;
+      
+      --warning: #f59e0b;
+      --warning-light: #fffbeb;
+      --warning-border: #fde68a;
+      
+      --danger: #ef4444;
+      --danger-light: #fef2f2;
+      --danger-border: #fecaca;
+      
+      --info: #0ea5e9;
+      --info-light: #f0f9ff;
+      
+      --bg-page: #f8fafc;
+      --bg-card: #ffffff;
+      --bg-subtle: #f1f5f9;
+      --border-color: #e2e8f0;
+      
+      --text-main: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #64748b;
+      
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+      --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+      
+      --radius-sm: 6px;
+      --radius: 12px;
+      --radius-lg: 18px;
+      
+      --font-main: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    body.dark-mode {
+      --bg-page: #0b1120;
+      --bg-card: #131d33;
+      --bg-subtle: #1e293b;
+      --border-color: #1e293b;
+      --text-main: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --text-muted: #94a3b8;
+      --primary-light: rgba(37, 99, 235, 0.15);
+      --success-light: rgba(16, 185, 129, 0.15);
+      --warning-light: rgba(245, 158, 11, 0.15);
+      --danger-light: rgba(239, 68, 68, 0.15);
+      --info-light: rgba(14, 165, 233, 0.15);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      font-size: 14.5px;
+    }
+
+    body {
+      font-family: var(--font-main);
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      line-height: 1.6;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      overflow-x: hidden;
+    }
+
+    a {
+      color: var(--primary);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    a:hover {
+      color: var(--primary-hover);
+    }
+
+    code, kbd {
+      font-family: var(--font-mono);
+      font-size: 0.88em;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      padding: 2px 6px;
+      border-radius: var(--radius-sm);
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    /* ==========================================================================
+       2. TOP NAVBAR
+       ========================================================================== */
+    .top-navbar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+      transition: all 0.3s ease;
+    }
+    body.dark-mode .top-navbar {
+      background: rgba(19, 29, 51, 0.9);
+      border-bottom-color: #1e293b;
+    }
+
+    .nav-container {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+    }
+
+    .brand-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+    }
+
+    .brand-title {
+      font-weight: 800;
+      font-size: 1.15rem;
+      letter-spacing: -0.3px;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 99px;
+      background: var(--primary-light);
+      color: var(--primary);
+      border: 1px solid var(--primary-border);
+    }
+
+    .search-box {
+      position: relative;
+      flex: 1;
+      max-width: 420px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 9px 16px 9px 40px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      border: 1px solid var(--border-color);
+      border-radius: 100px;
+      background: var(--bg-subtle);
+      color: var(--text-main);
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .search-input:focus {
+      border-color: var(--primary);
+      background: var(--bg-card);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 18px;
+      pointer-events: none;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: var(--radius);
+      font-weight: 600;
+      font-size: 0.88rem;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.2s ease;
+      font-family: inherit;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), #1d4ed8);
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    }
+    .btn-primary:hover {
+      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+      transform: translateY(-1px);
+      color: #ffffff;
+    }
+
+    .btn-secondary {
+      background: var(--bg-subtle);
+      color: var(--text-secondary);
+      border-color: var(--border-color);
+    }
+    .btn-secondary:hover {
+      background: var(--border-color);
+      color: var(--text-main);
+    }
+
+    /* ==========================================================================
+       3. HERO BANNER
+       ========================================================================== */
+    .hero-banner {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f2027 100%);
+      color: #ffffff;
+      padding: 46px 24px 64px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-content {
+      position: relative;
+      max-width: 900px;
+      margin: 0 auto;
+      z-index: 2;
+    }
+
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 100px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #38bdf8;
+      margin-bottom: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .hero-title {
+      font-size: 2.5rem;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 12px;
+      letter-spacing: -0.8px;
+    }
+    .hero-title span {
+      background: linear-gradient(135deg, #38bdf8, #818cf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-subtitle {
+      font-size: 1.05rem;
+      color: #cbd5e1;
+      max-width: 720px;
+      margin: 0 auto 28px;
+      font-weight: 400;
+    }
+
+    .tab-nav-wrapper {
+      display: inline-flex;
+      background: rgba(15, 23, 42, 0.85);
+      padding: 6px;
+      border-radius: 100px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(16px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .tab-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 18px;
+      border-radius: 100px;
+      font-size: 0.86rem;
+      font-weight: 700;
+      color: #94a3b8;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      font-family: inherit;
+    }
+
+    .tab-btn:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .tab-btn.active {
+      background: linear-gradient(135deg, var(--primary), #3b82f6);
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+    }
+
+    /* ==========================================================================
+       4. MAIN CONTAINER & TOC
+       ========================================================================== */
+    .manual-wrapper {
+      max-width: 1440px;
+      margin: -24px auto 60px;
+      padding: 0 24px;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 32px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .sidebar-toc {
+      position: sticky;
+      top: 80px;
+      height: calc(100vh - 100px);
+      overflow-y: auto;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .toc-title {
+      font-size: 0.78rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .toc-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .toc-group-header {
+      font-size: 0.74rem;
+      font-weight: 800;
+      color: var(--primary);
+      text-transform: uppercase;
+      margin-top: 12px;
+      margin-bottom: 4px;
+      padding-left: 8px;
+      letter-spacing: 0.5px;
+    }
+
+    .toc-link {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      font-size: 0.82rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .toc-link:hover {
+      background: var(--bg-subtle);
+      color: var(--primary);
+      transform: translateX(3px);
+    }
+
+    .toc-link.active {
+      background: var(--primary-light);
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    .toc-icon {
+      font-size: 15px;
+      color: var(--text-muted);
+    }
+    .toc-link.active .toc-icon {
+      color: var(--primary);
+    }
+
+    .manual-content {
+      min-width: 0;
+    }
+
+    /* ==========================================================================
+       5. SECTION CARDS
+       ========================================================================== */
+    .manual-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      margin-bottom: 28px;
+      box-shadow: var(--shadow-sm);
+      scroll-margin-top: 90px;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .section-header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .section-icon-badge {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .badge-blue { background: #dbeafe; color: #1d4ed8; }
+    .badge-purple { background: #ede9fe; color: #6d28d9; }
+    .badge-green { background: #d1fae5; color: #047857; }
+    .badge-amber { background: #fef3c7; color: #b45309; }
+    .badge-cyan { background: #cffafe; color: #0e7490; }
+
+    .section-title {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--text-main);
+      letter-spacing: -0.3px;
+    }
+
+    .section-desc {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .role-badge {
+      padding: 4px 10px;
+      border-radius: 100px;
+      font-size: 0.7rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .role-user { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
+    .role-admin { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+    .role-universal { background: #f3e8ff; color: #7e22ce; border: 1px solid #d8b4fe; }
+
+    /* ==========================================================================
+       6. STEP FLOW CARDS
+       ========================================================================== */
+    .step-flow {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin: 18px 0;
+    }
+
+    .step-card {
+      display: flex;
+      gap: 14px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 16px;
+      position: relative;
+      break-inside: avoid;
+    }
+
+    .step-number {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), #3b82f6);
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 0.88rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .step-body {
+      flex: 1;
+    }
+
+    .step-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 3px;
+    }
+
+    .step-text {
+      color: var(--text-secondary);
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+
+    /* ==========================================================================
+       7. UI SHOWCASE & COMPACT ANCHORED ARROWS
+       ========================================================================== */
+    .ui-showcase {
+      margin: 22px 0;
+      border: 1px solid #334155;
+      border-radius: var(--radius-lg);
+      background: #0f172a !important;
+      overflow: visible;
+      box-shadow: var(--shadow-md);
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .ui-showcase-header {
+      background: #1e293b !important;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #334155;
+      border-top-left-radius: var(--radius-lg);
+      border-top-right-radius: var(--radius-lg);
+    }
+
+    .mac-dots {
+      display: flex;
+      gap: 6px;
+    }
+    .mac-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+    }
+    .mac-red { background: #ef4444; }
+    .mac-yellow { background: #f59e0b; }
+    .mac-green { background: #10b981; }
+
+    .ui-url-bar {
+      background: #0f172a !important;
+      padding: 4px 14px;
+      border-radius: 100px;
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      color: #e2e8f0 !important;
+      border: 1px solid #475569;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 240px;
+    }
+
+    .ui-mock-screen {
+      padding: 30px 130px;
+      position: relative;
+      background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%) !important;
+      min-height: 380px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: visible;
+    }
+
+    .ui-mock-screen.light-screen {
+      background: #ffffff !important;
+      color: #0f172a !important;
+      padding: 30px 140px;
+    }
+
+    /* CARD CONTAINERS */
+    .glass-portal-card {
+      background: rgba(15, 23, 42, 0.85) !important;
+      border: 2px solid #38bdf8 !important;
+      border-radius: 18px;
+      padding: 20px 22px;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+      position: relative;
+    }
+
+    .mock-admin-btn {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      padding: 3px 7px;
+      border-radius: 6px;
+      color: #ffffff !important;
+      font-size: 0.7rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      text-transform: uppercase;
+    }
+
+    .mock-logo {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 8px;
+      color: white;
+    }
+
+    .mock-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .mock-field label {
+      display: block;
+      color: #f1f5f9 !important;
+      font-size: 0.7rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 3px;
+    }
+
+    .mock-input {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.45) !important;
+      border: 1px solid rgba(255, 255, 255, 0.3) !important;
+      padding: 6px 8px;
+      border-radius: 6px;
+      color: #ffffff !important;
+      font-size: 0.78rem;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .mock-btn-generate {
+      width: 100%;
+      padding: 8px 10px;
+      background: linear-gradient(135deg, #0ea5e9, #0284c7) !important;
+      border: 1px solid #38bdf8;
+      border-radius: 6px;
+      color: white !important;
+      font-weight: 800;
+      font-size: 0.84rem;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    /* POINTER BADGES & ARROWS */
+    .arrow-pointer-container {
+      position: absolute;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      pointer-events: auto;
+    }
+
+    .pointer-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      color: #ffffff !important;
+      font-weight: 800;
+      font-size: 0.7rem;
+      padding: 4px 8px;
+      border-radius: 100px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      white-space: nowrap;
+      border: 1.5px solid #ffffff;
+    }
+
+    .badge-red-pin     { background: #ef4444 !important; }
+    .badge-blue-pin    { background: #2563eb !important; }
+    .badge-amber-pin   { background: #d97706 !important; }
+    .badge-emerald-pin { background: #059669 !important; }
+    .badge-purple-pin  { background: #7c3aed !important; }
+
+    .arrow-svg {
+      overflow: visible;
+      flex-shrink: 0;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.35));
+    }
+
+    .arrow-path {
+      fill: none;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .arrow-head {
+      fill: currentColor;
+    }
+
+    /* Callout Legend */
+    .callout-legend-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 10px;
+      padding: 14px;
+      background: var(--bg-subtle);
+      border-top: 1px solid var(--border-color);
+      border-bottom-left-radius: var(--radius-lg);
+      border-bottom-right-radius: var(--radius-lg);
+    }
+
+    .callout-legend-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      background: var(--bg-card);
+      padding: 8px 12px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border-color);
+    }
+
+    .callout-pin-num {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      color: #ffffff !important;
+      font-weight: 800;
+      font-size: 0.7rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .callout-desc strong {
+      display: block;
+      color: var(--text-main);
+      font-size: 0.82rem;
+      margin-bottom: 2px;
+    }
+    .callout-desc span {
+      color: var(--text-secondary);
+      font-size: 0.76rem;
+    }
+
+    /* ==========================================================================
+       8. DTR PRINT PREVIEW SHEET MOCKUP
+       ========================================================================== */
+    .dtr-sheet-mock {
+      background: #ffffff !important;
+      border: 2px solid #0f172a !important;
+      border-radius: 6px;
+      padding: 14px;
+      color: #0f172a !important;
+      width: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      font-family: 'Arial', sans-serif;
+      position: relative;
+    }
+
+    .dtr-sheet-header {
+      text-align: center;
+      margin-bottom: 6px;
+    }
+    .dtr-sheet-header h3 {
+      font-size: 0.88rem;
+      font-weight: 900;
+      color: #0a1931 !important;
+      text-transform: uppercase;
+    }
+    .dtr-sheet-header p {
+      font-size: 0.64rem;
+      color: #475569 !important;
+    }
+    .dtr-divider {
+      height: 2px;
+      background: #0a1931 !important;
+      margin: 4px 0;
+    }
+
+    .dtr-meta-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.65rem;
+      margin-bottom: 6px;
+    }
+    .dtr-meta-label {
+      font-weight: 700;
+      color: #64748b !important;
+      font-size: 0.58rem;
+    }
+    .dtr-meta-val {
+      font-weight: 800;
+      color: #0a1931 !important;
+    }
+
+    .dtr-mini-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.6rem;
+      text-align: center;
+      margin-bottom: 6px;
+    }
+    .dtr-mini-table th, .dtr-mini-table td {
+      border: 1px solid #94a3b8 !important;
+      padding: 2px 2px;
+      color: #0f172a !important;
+    }
+    .dtr-mini-table th {
+      background: #f1f5f9 !important;
+      font-weight: 800;
+    }
+    .row-absent td { background-color: #fee2e2 !important; color: #991b1b !important; font-weight: bold; }
+    .row-late td { background-color: #fef3c7 !important; color: #92400e !important; font-weight: bold; }
+
+    .dtr-summary-boxes {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 4px;
+      text-align: center;
+      margin-top: 6px;
+      border-top: 1px solid #cbd5e1;
+      padding-top: 4px;
+    }
+    .summary-box {
+      border: 1px solid #cbd5e1 !important;
+      border-radius: 4px;
+      padding: 2px;
+      background: #f8fafc !important;
+    }
+    .summary-box .val {
+      font-size: 0.8rem;
+      font-weight: 900;
+      color: #0a1931 !important;
+    }
+    .summary-box .lbl {
+      font-size: 0.48rem;
+      font-weight: 700;
+      color: #475569 !important;
+      text-transform: uppercase;
+    }
+
+    /* ==========================================================================
+       9. FEATURE GRIDS & TABLES
+       ========================================================================== */
+    .feature-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px;
+      margin: 16px 0;
+    }
+
+    .feature-card {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 16px;
+      break-inside: avoid;
+    }
+    .feature-icon {
+      font-size: 24px;
+      color: var(--primary);
+      margin-bottom: 6px;
+    }
+    .feature-card h4 {
+      font-size: 0.92rem;
+      font-weight: 700;
+      margin-bottom: 3px;
+      color: var(--text-main);
+    }
+    .feature-card p {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      line-height: 1.45;
+    }
+
+    .mock-data-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #ffffff;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+      font-size: 0.82rem;
+      margin-bottom: 16px;
+      break-inside: avoid;
+    }
+
+    .mock-data-table th, .mock-data-table td {
+      padding: 8px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .mock-data-table th {
+      background: var(--bg-subtle);
+      font-weight: 700;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      font-size: 0.72rem;
+    }
+
+    .info-alert {
+      display: flex;
+      gap: 12px;
+      padding: 14px;
+      border-radius: var(--radius);
+      margin: 16px 0;
+      font-size: 0.86rem;
+      line-height: 1.5;
+      break-inside: avoid;
+    }
+    .alert-tip { background: var(--success-light); border: 1px solid var(--success-border); color: #065f46; }
+    .alert-note { background: var(--info-light); border: 1px solid #bae6fd; color: #0369a1; }
+    .alert-warning { background: var(--warning-light); border: 1px solid var(--warning-border); color: #92400e; }
+
+    /* FAQ */
+    .faq-item {
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      margin-bottom: 10px;
+      overflow: hidden;
+      background: var(--bg-card);
+      break-inside: avoid;
+    }
+    .faq-header {
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      font-weight: 700;
+      color: var(--text-main);
+      background: var(--bg-subtle);
+    }
+    .faq-body {
+      padding: 14px 16px;
+      color: var(--text-secondary);
+      font-size: 0.86rem;
+      line-height: 1.6;
+      border-top: 1px solid var(--border-color);
+      display: none;
+    }
+    .faq-item.open .faq-body {
+      display: block;
+    }
+    .faq-item.open .faq-chevron {
+      transform: rotate(180deg);
+    }
+
+    /* ==========================================================================
+       10. HIGH-PRECISION PRINT STYLESHEET (1 PAGE PER SECTION)
+       ========================================================================== */
+    @media print {
+      @page {
+        margin: 10mm 12mm;
+        size: A4 portrait;
+      }
+
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+      }
+      
+      .top-navbar, .sidebar-toc, .tab-nav-wrapper, .btn-print, .nav-actions {
+        display: none !important;
+      }
+      
+      body {
+        background: #ffffff !important;
+        color: #0f172a !important;
+      }
+      
+      .manual-wrapper {
+        display: block !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      
+      /* PAGE 1: COVER / TITLE PAGE */
+      .hero-banner {
+        padding: 80px 24px !important;
+        background: #0f172a !important;
+        color: #ffffff !important;
+        page-break-after: always !important;
+        break-after: page !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        min-height: 85vh !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        align-items: center !important;
+        text-align: center !important;
+        border-radius: 12px !important;
+      }
+      
+      .hero-title {
+        font-size: 2.4rem !important;
+      }
+
+      .hero-subtitle {
+        margin-bottom: 0 !important;
+        font-size: 1.1rem !important;
+      }
+
+      /* EACH SECTION STARTS ON A FRESH NEW PAGE */
+      .manual-section {
+        page-break-before: always !important;
+        break-before: page !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        border: 1px solid #cbd5e1 !important;
+        box-shadow: none !important;
+        padding: 20px 22px !important;
+        margin: 0 0 0 0 !important;
+        border-radius: 12px !important;
+        min-height: auto !important;
+      }
+
+      .section-header {
+        margin-bottom: 12px !important;
+        padding-bottom: 10px !important;
+      }
+
+      /* COMPACT MOCKUPS & STEPS FOR 1-PAGE FIT */
+      .ui-showcase {
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow: visible !important;
+        background: #0f172a !important;
+        border: 1px solid #334155 !important;
+        margin: 12px 0 !important;
+      }
+
+      .ui-mock-screen {
+        padding: 16px 125px !important;
+        min-height: auto !important;
+        background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%) !important;
+      }
+
+      .ui-mock-screen.light-screen {
+        padding: 14px 135px !important;
+        min-height: auto !important;
+        background: #ffffff !important;
+      }
+
+      .glass-portal-card {
+        max-width: 340px !important;
+        padding: 12px 14px !important;
+        background: #0f172a !important;
+        border: 2px solid #38bdf8 !important;
+      }
+
+      .dtr-sheet-mock {
+        max-width: 370px !important;
+        padding: 8px 10px !important;
+      }
+
+      .mock-field label, .mock-input, .mock-admin-btn {
+        color: #ffffff !important;
+      }
+
+      .pointer-badge {
+        font-size: 0.62rem !important;
+        padding: 3px 6px !important;
+        border-width: 1px !important;
+      }
+
+      .callout-legend-grid {
+        padding: 8px !important;
+        gap: 6px !important;
+      }
+
+      .callout-legend-item {
+        padding: 5px 8px !important;
+      }
+
+      .step-flow {
+        gap: 8px !important;
+        margin: 10px 0 !important;
+      }
+
+      .step-card {
+        padding: 8px 12px !important;
+      }
+
+      .step-number {
+        width: 24px !important;
+        height: 24px !important;
+        font-size: 0.75rem !important;
+      }
+
+      .step-title {
+        font-size: 0.86rem !important;
+      }
+
+      .step-text {
+        font-size: 0.78rem !important;
+        line-height: 1.4 !important;
+      }
+
+      .mock-data-table th, .mock-data-table td {
+        padding: 5px 8px !important;
+        font-size: 0.76rem !important;
+      }
+
+      .feature-grid-3 {
+        gap: 10px !important;
+        margin: 12px 0 !important;
+      }
+
+      .feature-card {
+        padding: 10px 12px !important;
+      }
+
+      .info-alert {
+        padding: 8px 12px !important;
+        margin: 10px 0 !important;
+        font-size: 0.8rem !important;
+      }
+
+      .faq-item {
+        margin-bottom: 6px !important;
+      }
+
+      .faq-header {
+        padding: 8px 12px !important;
+        font-size: 0.82rem !important;
+      }
+
+      .faq-body {
+        display: block !important;
+        padding: 8px 12px !important;
+        font-size: 0.78rem !important;
+        line-height: 1.45 !important;
+      }
+    }
+
+    @media (max-width: 1024px) {
+      .manual-wrapper {
+        grid-template-columns: 1fr;
+      }
+      .sidebar-toc {
+        display: none;
+      }
+      .hero-title {
+        font-size: 1.9rem;
+      }
+      .ui-mock-screen, .ui-mock-screen.light-screen {
+        padding: 30px 15px;
+        overflow-x: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==========================================================================
+       TOP NAVBAR
+       ========================================================================== -->
+  <header class="top-navbar">
+    <div class="nav-container">
+      <div class="brand-section" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+        <div class="brand-icon">
+          <span class="material-icons-round">schedule</span>
+        </div>
+        <div>
+          <div class="brand-title">
+            DTR Management System
+            <span class="brand-badge">Official Manual</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="search-box">
+        <span class="material-icons-round search-icon">search</span>
+        <input type="text" id="manualSearch" class="search-input" placeholder="Search guides, fields, buttons, rules..." onkeyup="filterManual()" />
+      </div>
+
+      <div class="nav-actions">
+        <button class="btn btn-secondary" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+          <span class="material-icons-round" id="themeIcon">dark_mode</span>
+        </button>
+        <button class="btn btn-primary btn-print" onclick="window.print()" title="Print or Save as PDF">
+          <span class="material-icons-round">print</span>
+          <span>Print Manual</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==========================================================================
+       HERO BANNER
+       ========================================================================== -->
+  <section class="hero-banner">
+    <div class="hero-content">
+      <div class="hero-tag">
+        <span class="material-icons-round" style="font-size:16px;">verified</span>
+        Complete System Documentation & UI Guide
+      </div>
+      <h1 class="hero-title">
+        How to Use the <span>DTR Management System</span>
+      </h1>
+      <p class="hero-subtitle">
+        Visual operation manual with pointer arrows and step-by-step procedures for Employees, HR Officers, and System Administrators.
+      </p>
+
+      <!-- View Selector Tabs -->
+      <div class="tab-nav-wrapper">
+        <button class="tab-btn active" onclick="switchView('all', this)">
+          <span class="material-icons-round">dashboard_customize</span>
+          Complete Manual
+        </button>
+        <button class="tab-btn" onclick="switchView('user', this)">
+          <span class="material-icons-round">account_circle</span>
+          User / Employee Portal
+        </button>
+        <button class="tab-btn" onclick="switchView('admin', this)">
+          <span class="material-icons-round">admin_panel_settings</span>
+          Admin & HR Operations
+        </button>
+        <button class="tab-btn" onclick="switchView('rules', this)">
+          <span class="material-icons-round">calculate</span>
+          Calculation Rules
+        </button>
+        <button class="tab-btn" onclick="switchView('faq', this)">
+          <span class="material-icons-round">help_outline</span>
+          FAQ & Troubleshooting
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================================================
+       MANUAL CONTAINER
+       ========================================================================== -->
+  <main class="manual-wrapper">
+    
+    <!-- Sidebar TOC -->
+    <aside class="sidebar-toc">
+      <div class="toc-title">
+        <span class="material-icons-round">menu_book</span>
+        Table of Contents
+      </div>
+      <ul class="toc-list">
+        <li class="toc-group-header">1. Overview</li>
+        <li><a href="#section-overview" class="toc-link"><span class="material-icons-round toc-icon">explore</span>System Architecture</a></li>
+        <li><a href="#section-roles" class="toc-link"><span class="material-icons-round toc-icon">badge</span>Roles & Permissions</a></li>
+
+        <li class="toc-group-header">2. User Side (Employee)</li>
+        <li><a href="#section-portal" class="toc-link"><span class="material-icons-round toc-icon">fingerprint</span>Employee Portal Guide</a></li>
+        <li><a href="#section-preview" class="toc-link"><span class="material-icons-round toc-icon">description</span>Reading & Printing DTR</a></li>
+
+        <li class="toc-group-header">3. Admin & HR Side</li>
+        <li><a href="#section-login" class="toc-link"><span class="material-icons-round toc-icon">lock</span>Admin Access</a></li>
+        <li><a href="#section-dashboard" class="toc-link"><span class="material-icons-round toc-icon">analytics</span>Dashboard & KPIs</a></li>
+        <li><a href="#section-upload" class="toc-link"><span class="material-icons-round toc-icon">cloud_upload</span>Biometric Log Upload</a></li>
+        <li><a href="#section-manage-logs" class="toc-link"><span class="material-icons-round toc-icon">inventory_2</span>Manage Log Sessions</a></li>
+        <li><a href="#section-employees" class="toc-link"><span class="material-icons-round toc-icon">people</span>Employees & Schedules</a></li>
+        <li><a href="#section-companies" class="toc-link"><span class="material-icons-round toc-icon">business</span>Companies & Grace Periods</a></li>
+        <li><a href="#section-cutoffs" class="toc-link"><span class="material-icons-round toc-icon">date_range</span>Cutoff Period Setup</a></li>
+        <li><a href="#section-lookup" class="toc-link"><span class="material-icons-round toc-icon">manage_search</span>Admin DTR Lookup</a></li>
+        <li><a href="#section-reports" class="toc-link"><span class="material-icons-round toc-icon">assessment</span>Exporting Reports</a></li>
+        <li><a href="#section-users" class="toc-link"><span class="material-icons-round toc-icon">supervisor_account</span>User Accounts & Roles</a></li>
+        <li><a href="#section-settings" class="toc-link"><span class="material-icons-round toc-icon">settings</span>Branding & Logo Settings</a></li>
+
+        <li class="toc-group-header">4. Reference & Help</li>
+        <li><a href="#section-calc-engine" class="toc-link"><span class="material-icons-round toc-icon">functions</span>Calculation Logic</a></li>
+        <li><a href="#section-faq" class="toc-link"><span class="material-icons-round toc-icon">quiz</span>FAQ & Troubleshooting</a></li>
+      </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="manual-content">
+
+      <!-- ==========================================================================
+           SECTION 1: SYSTEM OVERVIEW
+           ========================================================================== -->
+      <section id="section-overview" class="manual-section" data-role="all">
+        <div class="section-header">
+          <div class="section-header-left">
+            <div class="section-icon-badge badge-blue">
+              <span class="material-icons-round">explore</span>
+            </div>
+            <div>
+              <h2 class="section-title">System Architecture</h2>
+              <p class="section-desc">Automated biometric attendance processing pipeline.</p>
+            </div>
+          </div>
+          <span class="role-badge role-universal">General</span>
+        </div>
+
+        <p style="color:var(--text-secondary); margin-bottom: 16px;">
+          The <strong>DTR Management System</strong> is an automated attendance platform designed to parse raw biometric scanner punch records, calculate work hours, lates, breaks, and undertimes, and produce official printable Daily Time Records (DTR) and consolidated reports.
+        </p>
+
+        <div class="feature-grid-3">
+          <div class="feature-card">
+            <span class="material-icons-round feature-icon">fingerprint</span>
+            <h4>Biometric Log Parsing</h4>
+            <p>Directly processes standard <code>.log</code>, <code>.txt</code>, and <code>.csv</code> punch files exported from attendance terminals.</p>
+          </div>
+          <div class="feature-card">
+            <span class="material-icons-round feature-icon">public</span>
+            <h4>Public Employee Portal</h4>
+            <p>Enables employees to look up, verify, and print their own DTR sheets without requiring administrative login credentials.</p>
+          </div>
+          <div class="feature-card">
+            <span class="material-icons-round feature-icon">calculate</span>
+            <h4>Multi-Schedule Engine</h4>
+            <p>Handles Monday–Saturday, Monday–Friday, individual daily custom break times, and designated rest days.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================================================
+           SECTION 2: ROLES & ACCESS
+           ========================================================================== -->
+      <section id="section-roles" class="manual-section" data-role="all">
+        <div class="section-header">
+          <div class="section-header-left">
+            <div class="section-icon-badge badge-purple">
+              <span class="material-icons-round">badge</span>
+            </div>
+            <div>
+              <h2 class="section-title">Roles & Access Model</h2>
+              <p class="section-desc">Understanding portal access vs administrative access.</p>
+            </div>
+          </div>
+          <span class="role-badge role-universal">Security</span>
+        </div>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+          
+          <div style="background:var(--bg-subtle); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 18px;">
+            <div style="display:flex; align-items:center; gap: 10px; margin-bottom: 8px;">
+              <span class="material-icons-round" style="color:var(--success); font-size:26px;">account_circle</span>
+              <div>
+                <h3 style="font-size:1.05rem; font-weight:800;">User / Employee Portal</h3>
+                <span class="role-badge role-user">Public Access</span>
+              </div>
+            </div>
+            <p style="color:var(--text-secondary); font-size:0.86rem; margin-bottom: 10px;">
+              Designed for all active company employees. No password required.
+            </p>
+            <ul style="padding-left: 18px; color:var(--text-secondary); font-size:0.84rem; line-height: 1.6;">
+              <li>Select Company, Cutoff Rule, Month & Employee ID</li>
+              <li>View and print official DTR sheets with sign-off lines</li>
+              <li>Zero access to administrative logs or employee records</li>
+            </ul>
+          </div>
+
+          <div style="background:var(--bg-subtle); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 18px;">
+            <div style="display:flex; align-items:center; gap: 10px; margin-bottom: 8px;">
+              <span class="material-icons-round" style="color:var(--primary); font-size:26px;">admin_panel_settings</span>
+              <div>
+                <h3 style="font-size:1.05rem; font-weight:800;">Admin & HR Management</h3>
+                <span class="role-badge role-admin">Protected Access</span>
+              </div>
+            </div>
+            <p style="color:var(--text-secondary); font-size:0.86rem; margin-bottom: 10px;">
+              Designed for HR personnel, branch supervisors, and administrators.
+            </p>
+            <ul style="padding-left: 18px; color:var(--text-secondary); font-size:0.84rem; line-height: 1.6;">
+              <li>Import, audit, and delete biometric log batches</li>
+              <li>Manage employee roster, shift schedules, and rest days</li>
+              <li>Configure companies, grace periods, and cutoff periods</li>
+              <li>Generate 7 types of PDF & Excel attendance reports</li>
+            </ul>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ==========================================================================
+           SECTION 3: USER SIDE — EMPLOYEE PORTAL (PERFECT ARROW ALIGNMENT)
+           ========================================================================== -->
+      <section id="section-portal" class="manual-section" data-role="user">
+        <div class="section-header">
+          <div class="section-header-left">
+            <div class="section-icon-badge badge-green">
+              <span class="material-icons-round">fingerprint</span>
+            </div>
+            <div>
+              <h2 class="section-title">User Guide: Employee Portal</h2>
+              <p class="section-desc">How employees look up, verify, and generate their Daily Time Records.</p>
+            </div>
+          </div>
+          <span class="role-badge role-user">User Side</span>
+        </div>
+
+        <p style="color:var(--text-secondary); margin-bottom: 16px;">
+          When an employee opens the application, they are greeted with the dark <strong>Employee Portal</strong> landing page.
+        </p>
+
+        <!-- UI Showcase with Compact Anchored Arrows -->
+        <div class="ui-showcase">
+          <div class="ui-showcase-header">
+            <div class="mac-dots">
+              <div class="mac-dot mac-red"></div>
+              <div class="mac-dot mac-yellow"></div>
+              <div class="mac-dot mac-green"></div>
+            </div>
+            <div class="ui-url-bar">
+              <span class="material-icons-round" style="font-size:14px;color:#10b981;">lock</span>
+              Employee Portal — Daily Time Record
+            </div>
+            <div style="font-size:0.75rem; color:#94a3b8; font-weight:600;">PORTAL VIEW</div>
+          </div>
+
+          <div class="ui-mock-screen">
+            
+            <!-- Glass Portal Card -->
+            <div class="glass-portal-card" id="mock-portal-card">
+              
+              <!-- ── TOP BAR: LOGO & ADMIN BUTTON ── -->
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; position: relative;">
+                <div style="width: 60px;"></div>
+                
+                <div class="mock-logo" style="margin: 0;">
+                  <span class="material-icons-round" style="font-size:24px;">fingerprint</span>
+                </div>
+
+                <!-- Admin Button with Directly Anchored Arrow ★ -->
+                <div style="position: relative;">
+                  <div class="mock-admin-btn">
+                    <span class="material-icons-round" style="font-size:12px;">admin_panel_settings</span>
+                    Admin
+                  </div>
+                  <!-- Arrow ★: Admin Login -->
+                  <div class="arrow-pointer-container" style="position: absolute; right: -110px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: row-reverse; align-items: center;">
+                    <div class="pointer-badge badge-purple-pin">
+                      <span>★</span> Admin Login
+                    </div>
+                    <svg class="arrow-svg" width="28" height="18">
+                      <path class="arrow-path" stroke="#7c3aed" d="M 26,9 L 5,9" />
+                      <polygon class="arrow-head" fill="#7c3aed" points="5,5 0,9 5,13" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              <h3 style="color:white; text-align:center; font-size:1.15rem; font-weight:800; margin-bottom:2px;">
+                DTR Management System
+              </h3>
+              <p style="color:#cbd5e1; text-align:center; font-size:0.75rem; margin-bottom:16px;">
+                Access your Daily Time Record
+              </p>
+
+              <!-- ── ROW 1: COMPANY & CUTOFF ── -->
+              <div class="mock-grid-2">
+                
+                <!-- Company Field with Arrow 1 -->
+                <div class="mock-field" style="position: relative;">
+                  <label>Company</label>
+                  <div class="mock-input">
+                    <span class="material-icons-round" style="font-size:15px; color:#38bdf8;">business</span>
+                    <span>Conqueror Int'l...</span>
+                  </div>
+                  <!-- Arrow 1: Select Company -->
+                  <div class="arrow-pointer-container" style="position: absolute; left: -126px; top: 18px; display: flex; align-items: center;">
+                    <div class="pointer-badge badge-red-pin">
+                      <span>1</span> Select Company
+                    </div>
+                    <svg class="arrow-svg" width="28" height="18">
+                      <path class="arrow-path" stroke="#ef4444" d="M 2,9 L 23,9" />
+                      <polygon class="arrow-head" fill="#ef4444" points="23,5 28,9 23,13" />
+                    </svg>
+                  </div>
+                </div>
+                
+                <!-- Cutoff Field with Arrow 2 -->
+                <div class="mock-field" style="position: relative;">
+                  <label>Cutoff Rule</label>
+                  <div class="mock-input">
+                    <span class="material-icons-round" style="font-size:15px; color:#38bdf8;">date_range</span>
+                    <span>16th to EoM</span>
+                  </div>
+                  <!-- Arrow 2: Select Cutoff -->
+                  <div class="arrow-pointer-container" style="position: absolute; right: -115px; top: 18px; display: flex; flex-direction: row-reverse; align-items: center;">
+                    <div class="pointer-badge badge-blue-pin">
+                      <span>2</span> Select Cutoff
+                    </div>
+                    <svg class="arrow-svg" width="28" height="18">
+                      <path class="arrow-path" stroke="#2563eb" d="M 26,9 L 5,9" />
+                      <polygon class="arrow-head" fill="#2563eb" points="5,5 0,9 5,13" />
+                    </svg>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- ── ROW 2: MONTH & EMPLOYEE ID ── -->
+              <div class="mock-grid-2">
+                
+                <div class="mock-field">
+                  <label>Month</label>
+                  <div class="mock-input">
+                    <span class="material-icons-round" style="font-size:15px; color:#38bdf8;">calendar_month</span>
+                    <span>2026-07</span>
+                  </div>
+                </div>
+                
+                <!-- Employee ID Field with Arrow 3 -->
+                <div class="mock-field" style="position: relative;">
+                  <label>Employee ID Number</label>
+                  <div class="mock-input">
+                    <span class="material-icons-round" style="font-size:15px; color:#38bdf8;">badge</span>
+                    <span>0050474</span>
+                  </div>
+                  <!-- Arrow 3: Enter ID -->
+                  <div class="arrow-pointer-container" style="position: absolute; right: -100px; top: 18px; display: flex; flex-direction: row-reverse; align-items: center;">
+                    <div class="pointer-badge badge-amber-pin">
+                      <span>3</span> Enter ID
+                    </div>
+                    <svg class="arrow-svg" width="28" height="18">
+                      <path class="arrow-path" stroke="#d97706" d="M 26,9 L 5,9" />
+                      <polygon class="arrow-head" fill="#d97706" points="5,5 0,9 5,13" />
+                    </svg>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- ── ROW 3: GENERATE BUTTON ── -->
+              <div style="position: relative; width: 100%;">
+                
+                <!-- Arrow 4: Click Generate -->
+                <div class="arrow-pointer-container" style="position: absolute; left: -120px; top: 50%; transform: translateY(-50%); display: flex; align-items: center;">
+                  <div class="pointer-badge badge-emerald-pin">
+                    <span>4</span> Click Generate
+                  </div>
+                  <svg class="arrow-svg" width="28" height="18">
+                    <path class="arrow-path" stroke="#059669" d="M 2,9 L 23,9" />
+                    <polygon class="arrow-head" fill="#059669" points="23,5 28,9 23,13" />
+                  </svg>
+                </div>
+
+                <button class="mock-btn-generate">
+                  <span class="material-icons-round" style="font-size:16px;">description</span>
+                  Generate DTR
+                </button>
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- Pointer Callout Legend -->
+          <div class="callout-legend-grid">
+            <div class="callout-legend-item">
+              <div class="callout-pin-num badge-red-pin">1</div>
+              <div class="callout-desc">
+                <strong>Company Dropdown</strong>
+                <span>Select your designated company or branch.</span>
+              </div>
+            </div>
+            <div class="callout-legend-item">
+              <div class="callout-pin-num badge-blue-pin">2</div>
+              <div class="callout-desc">
+                <strong>Cutoff Rule Dropdown</strong>
+                <span>Select 1st–15th or 16th–End of Month.</span>
+              </div>
+            </div>
+            <div class="callout-legend-item">
+              <div class="callout-pin-num badge-amber-pin">3</div>
+              <div class="callout-desc">
+                <strong>Employee ID Number</strong>
+                <span>Enter your assigned biometric ID number.</span>
+              </div>
+            </div>
+            <div class="callout-legend-item">
+              <div class="callout-pin-num badge-emerald-pin">4</div>
+              <div class="callout-desc">
+                <strong>Generate DTR Button</strong>
+                <span>Generates the official printable Daily Time Record sheet.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step-by-Step Instructions -->
+        <h3 style="font-size:1.15rem; font-weight:800; margin: 20px 0 12px;">Step-by-Step Procedure for Employees</h3>
+        
+        <div class="step-flow">
+          <div class="step-card">
+            <div class="step-number">1</div>
+            <div class="step-body">
+              <div class="step-title">Choose your Company</div>
+              <div class="step-text">
+                Click the <strong>Company</strong> dropdown. Choose your assigned company. The Cutoff rules will automatically update.
+              </div>
+            </div>
+          </div>
+
+          <div class="step-card">
+            <div class="step-number">2</div>
+            <div class="step-body">
+              <div class="step-title">Select the Cutoff Period & Month</div>
+              <div class="step-text">
+                Select <strong>Period 1 (1st to 15th)</strong> or <strong>Period 2 (16th to End of Month)</strong>, then choose the Month (e.g. <code>July 2026</code>).
+              </div>
+            </div>
+          </div>
+
+          <div class="step-card">
+            <div class="step-number">3</div>
+            <div class="step-body">
+              <div class="step-title">Enter your Employee ID Number</div>
+              <div class="step-text">
+                Type your ID number (e.g. <code>0050474</code>). The system automatically matches leading zeroes.
+              </div>
+            </div>
+          </div>
+
+          <div class="step-card">
+            <div class="step-number">4</div>
+            <div class="step-body">
+              <div class="step-title">Click "Generate DTR"</div>
+              <div class="step-text">
+                Press <kbd>Enter</kbd> or click the blue <strong>Generate DTR</strong> button to view and print your report.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================================================
+           SECTION 4: USER SIDE — READING & PRINTING THE DTR (PERFECT ROW ALIGNMENT)
+           ========================================================================== -->
+      <section id="section-preview" class="manual-section" data-role="user">
+        <div class="section-header">
+          <div class="section-header-left">
+            <div class="section-icon-badge badge-cyan">
+              <span class="material-icons-round">description</span>
+            </div>
+            <div>
+              <h2 class="section-title">Reading & Printing Your DTR Sheet</h2>
+              <p class="section-desc">Understanding table columns, highlights, and clean printing.</p>
+            </div>
+          </div>
+          <span class="role-badge role-user">User Side</span>
+        </div>
+
+        <!-- DTR Sheet Mockup with Compact Anchored Arrows -->
+        <div class="ui-showcase">
+          <div class="ui-showcase-header">
+            <div class="mac-dots">
+              <div class="mac-dot mac-red"></div>
+              <div class="mac-dot mac-yellow"></div>
+              <div class="mac-dot mac-green"></div>
+            </div>
+            <div class="ui-url-bar">
+              <span class="material-icons-round" style="font-size:14px;color:#10b981;">lock</span>
+              DTR Print Preview & Verification
+            </div>
+            <div style="font-size:0.75rem; color:#94a3b8; font-weight:600;">PRINT PREVIEW</div>
+          </div>
+
+          <div class="ui-mock-screen light-screen">
+            
+            <!-- White DTR Card -->
+            <div class="dtr-sheet-mock">
+
+              <div class="dtr-sheet-header">
+                <h3>CONQUEROR INTERNATIONAL, INC.</h3>
+                <p>Barangay San Antonio, Pasig City, Metro Manila</p>
+                <div class="dtr-divider"></div>
+              </div>
+
+              <div class="dtr-meta-row">
+                <div>
+                  <div class="dtr-meta-label">EMPLOYEE CODE & NAME</div>
+                  <div class="dtr-meta-val">0050474 / DELA CRUZ, JUAN M.</div>
+                </div>
+                <div style="text-align:right;">
+                  <div class="dtr-meta-label">PAYROLL PERIOD</div>
+                  <div class="dtr-meta-val">July 16, 2026 — July 31, 2026</div>
+                </div>
+              </div>
+
+              <!-- DTR Table -->
+              <table class="dtr-mini-table">
+                <thead>
+                  <tr>
+                    <th>DAY</th>
+                    <th>DATE</th>
+                    <th>TIME IN</th>
+                    <th>1ST BO</th>
+                    <th>1ST BIN</th>
+                    <th>2ND BO</th>
+                    <th>2ND BIN</th>
+                    <th>TIME OUT</th>
+                    <th>REMARKS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style="text-align:left;font-weight:bold;">Thursday</td>
+                    <td>07/16/2026</td>
+                    <td>07:54 AM</td>
+                    <td>12:02 PM</td>
+                    <td>01:00 PM</td>
+                    <td>04:00 PM</td>
+                    <td>04:30 PM</td>
+                    <td>07:02 PM</td>
+                    <td></td>
+                  </tr>
+                  
+                  <tr class="row-late">
+                    <td style="text-align:left;font-weight:bold;">Friday</td>
+                    <td>07/17/2026</td>
+                    <td style="font-weight:bold;">08:18 AM</td>
+                    <td>12:00 PM</td>
+                    <td>01:00 PM</td>
+                    <td>04:00 PM</td>
+                    <td>04:30 PM</td>
+                    <td>07:00 PM</td>
+                    <td style="position: relative;">
+                      <!-- Arrow 1: Late Arrival (Yellow) attached right to Friday's remarks cell -->
+                      <div class="arrow-pointer-container" style="position: absolute; left: 100%; top: 50%; transform: translateY(-50%); margin-left: 6px; display: flex; flex-direction: row-reverse; align-items: center; white-space: nowrap;">
+                        <div class="pointer-badge badge-amber-pin" style="margin-left: 4px;">
+                          Yellow = Late Arrival
+                        </div>
+                        <svg class="arrow-svg" width="24" height="16">
+                          <path class="arrow-path" stroke="#d97706" stroke-width="2.5" d="M 22,8 L 4,8" />
+                          <polygon class="arrow-head" fill="#d97706" points="4,4 0,8 4,12" />
+                        </svg>
+                      </div>
+                    </td>
+                  </tr>
+
+                  <tr class="row-absent">
+                    <td style="text-align:left;font-weight:bold;position: relative;">
+                      <!-- Arrow 2: Absent (Red) attached left to Saturday's day cell -->
+                      <div class="arrow-pointer-container" style="position: absolute; right: 100%; top: 50%; transform: translateY(-50%); margin-right: 6px; display: flex; align-items: center; white-space: nowrap;">
+                        <div class="pointer-badge badge-red-pin" style="margin-right: 4px;">
+                          Red = Absent (Unexcused)
+                        </div>
+                        <svg class="arrow-svg" width="24" height="16">
+                          <path class="arrow-path" stroke="#ef4444" stroke-width="2.5" d="M 2,8 L 20,8" />
+                          <polygon class="arrow-head" fill="#ef4444" points="20,4 24,8 20,12" />
+                        </svg>
+                      </div>
+                      Saturday
+                    </td>
+                    <td>07/18/2026</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td></td>
+                  </tr>
+
+                  <tr>
+                    <td style="text-align:left;font-weight:bold;color:#64748b;">Sunday</td>
+                    <td>07/19/2026</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td></td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <!-- Summary Boxes -->
+              <div class="dtr-summary-boxes">
+                <div class="summary-box">
+                  <div class="val">13</div>
+                  <div class="lbl">Days Present</div>
+                </div>
+                <div class="summary-box">
+                  <div class="val" style="color:#ef4444;">1</div>
+                  <div class="lbl">Absents</div>
+                </div>
+                <div class="summary-box">
+                  <div class="val" style="color:#f59e0b;">1</div>
+                  <div class="lbl">Days Late</div>
+                </div>
+                <div class="summary-box">
+                  <div class="val" style="color:#f59e0b;">18</div>
+                  <div class="lbl">Late (Mins)</div>
+                </div>
+                <div class="summary-box">
+                  <div class="val" style="color:#6366f1;">0.0</div>
+                  <div class="lbl">Undertime</div>
+                </div>
+              </div>
+
+              <!-- Signatures Mock -->
+              <div style="display:flex; justify-content:space-between; margin-top:16px; text-align:center; font-size:0.58rem;">
+                <div style="border-top:1px solid #0a1931; width:100px; padding-top:2px; font-weight:bold;">Area Manager</div>
+                <div style="border-top:1px solid #0a1931; width:100px; padding-top:2px; font-weight:bold;">Store Supervisor</div>
+                <div style="border-top:1px solid #0a1931; width:100px; padding-top:2px; font-weight:bold;">Employee Signature</div>
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- Bottom Action Buttons in Mock -->
+          <div style="background:#1e293b; padding:10px; display:flex; justify-content:center; gap:10px; border-bottom-left-radius:var(--radius-lg); border-bottom-right-radius:var(--radius-lg);">
+            <button class="btn btn-primary" style="padding: 6px 14px; font-size: 0.82rem;">
+              <span class="material-icons-round" style="font-size: 16px;">print</span> Print Sheet
+            </button>
+            <button class="btn btn-secondary" style="background:#334155; color:white; border-color:#475569; padding: 6px 14px; font-size: 0.82rem;">
+              <span class="material-icons-round" style="font-size: 16px;">arrow_back</span> Go Back
+            </button>
+          </div>
+        </div>
+
+        <h3 style="font-size:1.15rem; font-weight:800; margin: 20px 0 10px;">DTR Table Columns Breakdown</h3>
+        <table class="mock-data-table">
+          <thead>
+            <tr>
+              <th style="width:140px;">Column Header</th>
+              <th>Description & Calculation Rule</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>DAY & DATE</code></td>
+              <td>Calendar day and formatted date (<code>MM/DD/YYYY</code>) within the selected cutoff period.</td>
+            </tr>
+            <tr>
+              <td><code>TIME IN</code></td>
+              <td>The very first <strong>Check In</strong> ('I') biometric punch recorded for that day.</td>
+            </tr>
+            <tr>
+              <td><code>1ST BO & 1ST BIN</code></td>
+              <td><strong>1st Break Out</strong> (Lunch Out) and <strong>1st Break In</strong> (Lunch In) intermediate punch pairing.</td>
+            </tr>
+            <tr>
+              <td><code>2ND BO & 2ND BIN</code></td>
+              <td><strong>2nd Break Out</strong> (Afternoon Break Out) and <strong>2nd Break In</strong> (Afternoon Break In).</td>
+            </tr>
+            <tr>
+              <td><code>TIME OUT</code></td>
+              <td>The final <strong>Check Out</strong> ('O') biometric punch recorded for that day.</td>
+            </tr>
+            <tr>
+              <td><code>REMARKS</code></td>
+              <td>Reserved space for supervisor verification or manual remarks on the printed copy.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="info-alert alert-tip">
+          <span class="material-icons-round" style="font-size:24px;">print</span>
+          <div>
+            <strong>Printing Instructions:</strong><br>
+            Click the blue <strong>Print Sheet</strong> button at the bottom of the DTR sheet to open your browser's print dialog. Choose <strong>Destination: Save as PDF</strong> or select your physical printer. Ensure <strong>Background Graphics</strong> is checked in your print settings to retain table formatting.
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================================================
+           SECTION 5: ADMIN SIDE — LOGIN & ACCESS
+           ========================================================================== -->
+      <section id="section-login" class="manual-section" data-role="admin">
+        <div class="section-header">
+          <div class="section-header-left">
+            <div class="section-icon-badge badge-blue">
+              <span class="material-icons-round">lock</span>
+            </div>
+            <div>
+              <h2 class="section-title">Admin & HR Access</h2>
+              <p class="section-desc">Accessing the Administrative Control Panel.</p>
+            </div>
+          </div>
+          <span class="role-badge role-admin">Admin Side</span>
+        </div>
+
+        <p style="color:var(--text-secondary); margin-bottom: 16px;">
+          To access management features, click the <strong>ADMIN</strong> badge located in the top-right corner of the Employee Portal or navigate to the admin sign-in screen.
+        </p>
+
+        <div class="feature-grid-3">
+          <div class="feature-card">
+            <span class="material-icons-round feature-icon" style="color:#2563eb;">badge</span>
+            <h4>Admin Credentials</h4>
+            <p>Enter your designated administrator username and account password assigned by your organization.</p>
+          </div>
+          <div class="feature-card">
+            <span class="material-icons-round feature-icon" style="color:#10b981;">security</span>
+            <h4>Role Hierarchy</h4>
+            <p><strong>Admin</strong>: Full system access including user creation and branding.<br><strong>HR</strong>: Attendance and reporting access.</p>
+          </div>
+          <div class="feature-card">
+            <span class="material-icons-round feature-icon" style="color:#6366f1;">logout</span>
+            <h4>Session Security</h4>
+            <p>Clicking <strong>Logout</strong> in the bottom sidebar clears the active session and locks the console.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================================================
+           SECTION 6: ADMIN SIDE — DASHBOARD & ANALYTICS
+           ========================================================================== -->
+      <section id="section-dashboard" class="manual-section" data-role="admin">
+        <div class="section-header">
+          <div class="section-header-left">
+            <div class="section-icon-badge badge-purple">
+              <span class="material-icons-round">analytics</span>
+            </div>
+            <div>
+              <h2 class="section-title">Admin Dashboard & Statistics</h2>
+              <p class="section-desc">Live statistics, attendance trend charts, and company distribution.</p>
+            </div>
+          </div>
+          <span class="role-badge role-admin">Admin Side</span>
+        </div>
+
+        <ul style="color:var(--text-secondary); line-height: 1.8; padding-left: 20px;">
+          <li><strong>Total Employees</strong>: Number of active employees registered across all companies.</li>
+          <li><strong>Total Companies</strong>: Number of active business units / branches.</li>
+          <li><strong>Total Log Entries</strong>: Cumulative biometric punches stored in the database.</li>
+          <li><strong>Today's Attendance</strong>: Biometric punches stamped on the current day.</li>
+          <li><strong>Last Import Records</strong>: Row count processed in the most recent log upload.</li>
+          <li><strong>Daily Attendance 14-Day Chart</strong>: Animated bar chart tracking daily distinct employee attendance trends.</li>
+        </ul>
+      </section>
+
+      <!-- ==========================================================================
+           SECTION 7: ADMIN SIDE — LOG UPLOAD ENGINE & BIOMETRIC SYNC
+           ========================================================================== -->
+      <section id="section-upload" class="manual-section" data-role="admin">
+        <div class="section-header">
+          <div class="section-header-left">
+            <div class="section-icon-badge badge-amber">
+              <span class="material-icons-round">cloud_upload</span>
+            </div>
+            <div>
+              <h2 class="section-title">Biometric Log Upload & Direct Device Sync</h2>
+              <p class="section-desc">Sync attendance directly from your IntelliSmart fingerprint machine or upload decrypted logs.</p>
+            </div>
+          </div>
+          <span class="role-badge role-admin">Admin Side</span>
+        </div>
+
+        <p style="color:var(--text-secondary); margin-bottom: 16px;">
+          The system provides two seamless ways to get attendance logs into the database: <strong>Direct Network Sync</strong> over IP (no extra software needed) and <strong>Universal Log Decryption</strong> for USB exports.
+        </p>
+
+        <!-- Method 1: Direct Network Sync -->
+        <h3 style="font-size:1.15rem; font-weight:800; margin: 22px 0 12px; color:var(--primary);">
+          <span class="material-icons-round" style="vertical-align:middle;font-size:20px;">fingerprint</span>
+          Method 1: Direct Network Biometric Sync (Recommended)
+        </h3>
+        <p style="color:var(--text-secondary); margin-bottom: 12px;">
+          Connect directly to your <strong>IntelliSmart</strong> or <strong>ZKTeco</strong> machine across your local network:
+        </p>
+
+        <div class="step-flow">
+          <div class="step-card">
+            <div class="step-number">1</div>
+            <div class="step-body">
+              <div class="step-title">Connect Biometric Machine to Network / PC</div>
+              <div class="step-text">
+                Connect your biometric device to your local network switch/router using an <strong>Ethernet (LAN) cable</strong> (or directly into your PC's LAN port). Ensure your computer and the biometric machine are on the same subnet (e.g. <code>192.168.1.xxx</code>).
+              </div>
+            </div>
+          </div>
+          <div class="step-card">
+            <div class="step-number">2</div>
+            <div class="step-body">
+              <div class="step-title">Click "Sync from Device (IP)"</div>
+              <div class="step-text">
+                On the <strong>Upload Logs</strong> page, click the blue <strong>Sync from Device (IP)</strong> button in the top banner.
+              </div>
+            </div>
+          </div>
+          <div class="step-card">
+            <div class="step-number">3</div>
+            <div class="step-body">
+              <div class="step-title">Test Connection & Sync</div>
+              <div class="step-text">
+                Confirm your device's <strong>IP Address</strong> (e.g. <code>192.168.1.201</code>) and <strong>Port</strong> (<code>4370</code>). Click <strong>Test Connection</strong> to verify communication, then click <strong>Sync Now</strong>. The system will download all attendance logs, decode them, and insert them into the database automatically.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Method 2: USB File Decryption -->
+        <h3 style="font-size:1.15rem; font-weight:800; margin: 26px 0 12px; color:var(--primary);">
+          <span class="material-icons-round" style="vertical-align:middle;font-size:20px;">lock_open</span>
+          Method 2: USB Export & Universal Log Decryption
+        </h3>
+        <p style="color:var(--text-secondary); margin-bottom: 12px;">
+          If you download logs via a USB flash drive, the built-in universal decryptor automatically unpacks binary structures, encrypted streams, and Chinese character encodings:
+        </p>
+
+        <div style="background:var(--bg-subtle); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 14px; font-family: var(--font-mono); font-size: 0.85rem; margin-bottom: 16px;">
+          <div style="color:var(--text-muted); font-size: 0.72rem; margin-bottom: 4px;">// Supported File Types (Auto-Decrypted):</div>
+          <div style="color:var(--text-main);">• <strong>.dat / attlog.dat</strong> — Binary packed C-structures from ZKTeco/IntelliSmart USB exports</div>
+          <div style="color:var(--text-main);">• <strong>Chinese Encodings</strong> — GBK, GB2312, GB18030, Big5, UTF-16 (automatically fixes Mojibake)</div>
+          <div style="color:var(--text-main);">• <strong>XOR Scrambled Files</strong> — Automatically unmasked and converted</div>
+          <div style="color:var(--text-main);">• <strong>.log / .txt / .csv</strong> — Standard delimited punch records</div>
+        </div>
+
+        <div class="step-flow">
+          <div class="step-card">
+            <div class="step-number">1</div>
+            <div class="step-body">
+              <div class="step-title">Drag & Drop Any Log File</div>
+              <div class="step-text">
+                Drag your <code>attlog.dat</code>, <code>.log</code>, <code>.txt</code>, or <code>.csv</code> file into the upload zone or click <strong>Select Files</strong>.
+              </div>
+            </div>
+          </div>
+          <div class="step-card">
+            <div class="step-number">2</div>
+            <div class="step-body">
+              <div class="step-title">Click "Process & Decrypt Logs"</div>
+              <div class="step-text">
+                Click the <strong>Process & Decrypt Logs</strong> button. The universal decryptor automatically detects the format, decrypts it, and inserts all records.
+              </div>
+            </div>
+          </div>
+          <div class="step-card">
+            <div class="step-number">3</div>
+            <div class="step-body">
+              <div class="step-title">Review Summary</div>
+              <div class="step-text">
+                A summary dialog displays the count of imported records, duplicate records, and invalid lines.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================================================
+           SECTION 8: ADMIN SIDE — MANAGE LOGS
+           ========================================================================== -->
+      <section id="section-manage-logs" class="manual-section" data-role="admin">
+        <div class="section-header">
+          <div class="section-header-left">
+            <div class="section-icon-badge badge-blue">
+              <span class="material-icons-round">inventory_2</span>
+            </div>
+            <div>
+              <h2 class="section-title">Manage Uploaded Logs</h2>
+              <p class="section-desc">Audit sessions, search individual punches, and delete batches.</p>
+            </div>
+          </div>
+          <span class="role-badge role-admin">Admin Side</span>
+        </div>
+
+        <div class="feature-grid-3">
+          <div class="feature-card">
+            <span class="material-icons-round feature-icon" style="color:#2563eb;">visibility</span>
+            <h4>Inspect Parsed Records</h4>
+            <p>Click on any upload session row to view all parsed punches with search and pagination.</p>
+          </div>
+          <div class="feature-card">
+            <span class="material-icons-round feature-icon" style="color:#ef4444;">delete_sweep</span>
+            <h4>Cascading Rollback</h4>
+            <p>Deleting a session automatically deletes all attendance logs associated with that upload.</p>
+          </div>
+          <div class="feature-card">
+            <span class="material-icons-round feature-icon" style="color:#10b981;">checklist</span>
+            <h4>Bulk Session Actions</h4>
+            <p>Select multiple sessions using the checkboxes to delete old or duplicate batches in bulk.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================================================
+           SECTION 9: ADMIN SIDE — EMPLOYEES & SCHEDULE CUSTOMIZER
+           ========================================================================== -->
+      <section id="section-employees" class="manual-section" data-role="admin">
+        <div class="section-header">
+          <div class="section-header-left">
+            <div class="section-icon-badge badge-purple">
+              <span class="material-icons-round">people</span>
+            </div>
+            <div>
+              <h2 class="section-title">Employee Directory & Custom Schedules</h2>
+              <p class="section-desc">Adding employees, assigning companies, and configuring daily shift hours & rest days.</p>
+            </div>
+          </div>
+          <span class="role-badge role-admin">Admin Side</span>
+        </div>
+
+        <h3 style="font-size:1.15rem; font-weight:800; margin: 18px 0 10px;">Employee Data Fields</h3>
+        <table class="mock-data-table">
+          <thead>
+            <tr>
+              <th>Field Name</th>
+              <th>Requirement</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>Employee ID</code></td>
+              <td>Required</td>
+              <td>Biometric ID matching the scanner (e.g. <code>0050474</code>).</td>
+            </tr>
+            <tr>
+              <td><code>First & Last Name</code></td>
+              <td>Required</td>
+              <td>Legal name displayed on the DTR and reports.</td>
+            </tr>
+            <tr>
+              <td><code>Middle Name</code></td>
+              <td>Optional</td>
+              <td>Middle initial is formatted automatically on the DTR header.</td>
+            </tr>
+            <tr>
+              <td><code>Company</code></td>
+              <td>Required</td>
+              <td>Company or branch the employee belongs to.</td>
+            </tr>
+            <tr>
+              <td><code>Work Schedule</code></td>
+              <td>Required</td>
+              <td><code>Mon - Sat</code> (Sunday Rest) or <code>Mon - Fri</code> (Saturday & Sunday Rest).</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Custom Schedule Modal Breakdown -->
+        <div style="background:var(--bg-subtle); border:1px solid var(--border-color); border-radius:var(--radius); padding:20px; margin-top:16px;">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+            <span class="material-icons-round" style="color:var(--primary); font-size:22px;">calendar_month</span>
+            <h4 style="font-size:1.05rem; font-weight:800;">"Customize Schedule" Feature</h4>
+          </div>
+          <p style="color:var(--text-secondary); font-size:0.88rem; margin-bottom:14px;">
+            Clicking <strong>Customize Schedule</strong> inside the Employee modal allows:
+          </p>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px;">
+            <div style="background:white; padding:14px; border-radius:8px; border:1px solid var(--border-color);">
+              <div style="font-weight:700; color:var(--text-main); margin-bottom:4px;">1. Default Shift Times</div>
+              <div style="font-size:0.82rem; color:var(--text-secondary);">
+                Set default <strong>Work Start</strong> (e.g. <code>08:00 AM</code>), <strong>1st Break Out/In</strong>, <strong>2nd Break Out/In</strong>, and <strong>Work End</strong> (e.g. <code>07:00 PM</code>).
+              </div>
+            </div>
+            <div style="background:white; padding:14px; border-radius:8px; border:1px solid var(--border-color);">
+              <div style="font-weight:700; color:var(--text-main); margin-bottom:4px;">2. Day-by-Day Overrides</div>
+              <div style="font-size:0.82rem; color:var(--text-secondary);">
+                Check individual days (Monday–Sunday) to set distinct shift times or check <strong>Set as Rest Day</strong> to exempt from absences.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================================================
+           SECTION 10: ADMIN SIDE — COMPANIES & CUTOFFS
+           ========================================================================== -->
+      <section id="section-companies" class="manual-section" data-role="admin">
+        <div class="section-header">
+          <div class="section-header-left">
+            <div class="section-icon-badge badge-green">
+              <span class="material-icons-round">business</span>
+            </div>
+            <div>
+              <h2 class="section-title">Companies & Cutoff Rules</h2>
+              <p class="section-desc">Setting up companies, grace periods, area managers, and payroll brackets.</p>
+            </div>
+          </div>
+          <span class="role-badge role-admin">Admin Side</span>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+          <div>
+            <h3 style="font-size:1.1rem; font-weight:800; margin-bottom:10px;">Company Settings</h3>
+            <ul style="color:var(--text-secondary); font-size:0.86rem; line-height: 1.8; padding-left: 18px;">
+              <li><strong>Company Name & Address</strong>: Appears at the top of DTR sheets and reports.</li>
+              <li><strong>Grace Period (Minutes)</strong>: Allowable arrival window before being flagged as Late (e.g. <code>10 mins</code>).</li>
+              <li><strong>Area Manager & Store Supervisor</strong>: Names printed above signature sign-off lines.</li>
+            </ul>
+          </div>
+
+          <div id="section-cutoffs">
+            <h3 style="font-size:1.1rem; font-weight:800; margin-bottom:10px;">Cutoff Rules</h3>
+            <div style="background:var(--bg-subtle); border:1px solid var(--border-color); border-radius:8px; padding:12px;">
+              <div style="font-weight:700; color:var(--primary); font-size:0.85rem;">Period 1: 1st to 15th</div>
+              <div style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:8px;">Start Day: <code>1</code> &bull; End Day: <code>15</code></div>
+              
+              <div style="font-weight:700; color:var(--primary); font-size:0.85rem;">Period 2: 16th to End of Month</div>
+              <div style="font-size:0.8rem; color:var(--text-secondary);">Start Day: <code>16</code> &bull; End Day: <code>31</code> (Auto-adjusts for 28/30 days)</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================================================
+           SECTION 11: ADMIN SIDE — DTR LOOKUP & REPORTS
+           ========================================================================== -->
+      <section id="section-lookup" class="manual-section" data-role="admin">
+        <div class="section-header">
+          <div class="section-header-left">
+            <div class="section-icon-badge badge-cyan">
+              <span class="material-icons-round">manage_search</span>
+            </div>
+            <div>
+              <h2 class="section-title">Admin DTR Lookup & Report Generator</h2>
+              <p class="section-desc">Search employee attendance records and export consolidated PDF/Excel summaries.</p>
+            </div>
+          </div>
+          <span class="role-badge role-admin">Admin Side</span>
+        </div>
+
+        <h3 style="font-size:1.1rem; font-weight:800; margin-bottom:8px;">1. DTR Lookup</h3>
+        <p style="color:var(--text-secondary); font-size:0.88rem; margin-bottom:14px;">
+          Admins can look up employee records by either:
+        </p>
+        <ul style="color:var(--text-secondary); font-size:0.86rem; line-height: 1.8; padding-left: 18px; margin-bottom: 20px;">
+          <li><strong>Custom Date Range</strong>: Specify any arbitrary start and end dates.</li>
+          <li><strong>Cutoff Period</strong>: Check "Use Cutoff Period" to select a month and cutoff rule.</li>
+        </ul>
+
+        <div id="section-reports">
+          <h3 style="font-size:1.1rem; font-weight:800; margin-bottom:10px;">2. Consolidated Reports (7 Formats)</h3>
+
+          <div class="feature-grid-3">
+            <div class="feature-card">
+              <span class="material-icons-round feature-icon">badge</span>
+              <h4>Individual DTR</h4>
+              <p>Official single-employee DTR PDF report ready for filing.</p>
+            </div>
+            <div class="feature-card">
+              <span class="material-icons-round feature-icon">today</span>
+              <h4>Daily Attendance</h4>
+              <p>Consolidated roster of all check-ins and check-outs for a selected date.</p>
+            </div>
+            <div class="feature-card">
+              <span class="material-icons-round feature-icon">calendar_month</span>
+              <h4>Monthly Attendance</h4>
+              <p>Monthly summary showing total days present, lates, and undertime per employee.</p>
+            </div>
+            <div class="feature-card">
+              <span class="material-icons-round feature-icon">business</span>
+              <h4>Company Attendance</h4>
+              <p>Attendance report grouped and totaled by company branch.</p>
+            </div>
+            <div class="feature-card">
+              <span class="material-icons-round feature-icon">timer</span>
+              <h4>Late Report</h4>
+              <p>Filtered list of employees who arrived beyond the company grace period.</p>
+            </div>
+            <div class="feature-card">
+              <span class="material-icons-round feature-icon">event_busy</span>
+              <h4>Absent Report</h4>
+              <p>Identifies employees with zero punch logs on required workdays (excluding rest days).</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================================================
+           SECTION 12: ADMIN SIDE — USERS & SETTINGS
+           ========================================================================== -->
+      <section id="section-users" class="manual-section" data-role="admin">
+        <div class="section-header">
+          <div class="section-header-left">
+            <div class="section-icon-badge badge-purple">
+              <span class="material-icons-round">settings</span>
+            </div>
+            <div>
+              <h2 class="section-title">User Accounts & System Settings</h2>
+              <p class="section-desc">Manage credentials, roles, application name, and company logo.</p>
+            </div>
+          </div>
+          <span class="role-badge role-admin">Admin Side</span>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+          <div>
+            <h3 style="font-size:1.1rem; font-weight:800; margin-bottom:8px;">User Accounts</h3>
+            <ul style="color:var(--text-secondary); font-size:0.86rem; line-height: 1.8; padding-left: 18px;">
+              <li>Click <strong>Add User</strong> to input Username, Full Name, Password, and Role.</li>
+              <li>Role <code>Admin</code>: Complete system permissions.</li>
+              <li>Role <code>HR</code>: Attendance management and report export rights.</li>
+            </ul>
+          </div>
+
+          <div id="section-settings">
+            <h3 style="font-size:1.1rem; font-weight:800; margin-bottom:8px;">Branding & Logo</h3>
+            <ul style="color:var(--text-secondary); font-size:0.86rem; line-height: 1.8; padding-left: 18px;">
+              <li><strong>App Name</strong>: Updates the system title on the Portal and Login screens.</li>
+              <li><strong>App Logo Upload</strong>: Upload your company logo. The system converts it to Base64 and updates all public headers immediately.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================================================
+           SECTION 13: CALCULATION ENGINE & RULES
+           ========================================================================== -->
+      <section id="section-calc-engine" class="manual-section" data-role="rules">
+        <div class="section-header">
+          <div class="section-header-left">
+            <div class="section-icon-badge badge-amber">
+              <span class="material-icons-round">functions</span>
+            </div>
+            <div>
+              <h2 class="section-title">Biometric Calculation Rules</h2>
+              <p class="section-desc">Algorithmic rules for punch pairing, grace periods, lates, and rest days.</p>
+            </div>
+          </div>
+          <span class="role-badge role-universal">Core Engine</span>
+        </div>
+
+        <div class="feature-grid-3">
+          <div class="feature-card">
+            <h4>1. Punch Pairing</h4>
+            <p><strong>First 'I' punch</strong> = Time In.<br><strong>Last 'O' punch</strong> = Time Out.<br>Intermediate punches are assigned to 1st Break Out/In and 2nd Break Out/In.</p>
+          </div>
+          <div class="feature-card">
+            <h4>2. Late Calculation</h4>
+            <p>Late triggers if <code>Time In > (Work Start + Grace Period)</code>.<br>Late Minutes = <code>Time In - Work Start</code>.<br>Example: 8:00 AM start + 10m grace; punch at 8:15 AM = <strong>15 mins late</strong>.</p>
+          </div>
+          <div class="feature-card">
+            <h4>3. Rest Day vs Absence</h4>
+            <p>Days with <strong>zero punches</strong> are marked <code>Rest Day</code> if the day matches the employee's rest schedule. Otherwise, marked <code>Absent</code>.</p>
+          </div>
+        </div>
+
+        <h3 style="font-size:1.1rem; font-weight:800; margin: 18px 0 10px;">Punch Pairing State Machine</h3>
+        <table class="mock-data-table">
+          <thead>
+            <tr>
+              <th>Recorded Punches on Day</th>
+              <th>Matched Field Assignment</th>
+              <th>Calculated Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>2 Punches</code> (e.g. 07:55 I, 17:00 O)</td>
+              <td>Time In = 07:55 AM &bull; Time Out = 05:00 PM</td>
+              <td>Present (Normal Shift)</td>
+            </tr>
+            <tr>
+              <td><code>4 Punches</code> (07:50 I, 12:00 O, 13:00 I, 17:05 O)</td>
+              <td>Time In = 07:50 &bull; 1st BO = 12:00 &bull; 1st BIN = 13:00 &bull; Time Out = 17:05</td>
+              <td>Present (1 Lunch Break)</td>
+            </tr>
+            <tr>
+              <td><code>6 Punches</code> (In, BO1, BIN1, BO2, BIN2, Out)</td>
+              <td>All 6 time columns populated cleanly</td>
+              <td>Present (2 Breaks Logged)</td>
+            </tr>
+            <tr>
+              <td><code>0 Punches</code> (On Sunday with Mon-Sat schedule)</td>
+              <td>All time cells blank</td>
+              <td>Rest Day</td>
+            </tr>
+            <tr>
+              <td><code>0 Punches</code> (On Tuesday with Mon-Sat schedule)</td>
+              <td>All time cells blank</td>
+              <td>Absent (Red Highlight)</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- ==========================================================================
+           SECTION 14: FAQ & TROUBLESHOOTING
+           ========================================================================== -->
+      <section id="section-faq" class="manual-section" data-role="faq">
+        <div class="section-header">
+          <div class="section-header-left">
+            <div class="section-icon-badge badge-blue">
+              <span class="material-icons-round">quiz</span>
+            </div>
+            <div>
+              <h2 class="section-title">Frequently Asked Questions & Troubleshooting</h2>
+              <p class="section-desc">Quick solutions to common operational and hardware log issues.</p>
+            </div>
+          </div>
+          <span class="role-badge role-universal">Help Center</span>
+        </div>
+
+        <div class="faq-item open">
+          <div class="faq-header" onclick="toggleFaq(this)">
+            <span>1. Why does an employee get "No active employee found with ID" on the portal?</span>
+            <span class="material-icons-round faq-chevron">expand_more</span>
+          </div>
+          <div class="faq-body">
+            <strong>Verify the following:</strong><br>
+            1. Ensure the employee is registered under the selected <strong>Company</strong>.<br>
+            2. Verify that the <strong>Employee ID</strong> matches the record in the employee roster.<br>
+            3. Confirm that the employee is marked active.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-header" onclick="toggleFaq(this)">
+            <span>2. What happens if an employee forgets to clock out (Missing Time Out)?</span>
+            <span class="material-icons-round faq-chevron">expand_more</span>
+          </div>
+          <div class="faq-body">
+            If only one 'I' punch exists without an 'O' punch, the system records <code>Time In</code> and leaves <code>Time Out</code> blank. HR can review this via the <strong>Missing Logs Report</strong> in the Reports module.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-header" onclick="toggleFaq(this)">
+            <span>3. How do I handle duplicate logs if the same file was uploaded twice?</span>
+            <span class="material-icons-round faq-chevron">expand_more</span>
+          </div>
+          <div class="faq-body">
+            The uploader contains built-in duplicate detection and skips previously imported lines automatically. If you wish to remove an entire upload batch, navigate to <strong>Manage Logs</strong> and click the red <strong>Delete</strong> button next to that session.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-header" onclick="toggleFaq(this)">
+            <span>4. How do I change an account password?</span>
+            <span class="material-icons-round faq-chevron">expand_more</span>
+          </div>
+          <div class="faq-body">
+            Log in as an Administrator, navigate to <strong>User Accounts</strong>, locate the user, and click <strong>Edit</strong> to enter and save a new password.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-header" onclick="toggleFaq(this)">
+            <span>5. Can the DTR sheet be printed directly without saving as PDF first?</span>
+            <span class="material-icons-round faq-chevron">expand_more</span>
+          </div>
+          <div class="faq-body">
+            Yes! Click the blue <strong>Print Sheet</strong> button at the bottom of the DTR preview. Your browser's print dialog will open immediately. Select your physical printer or choose "Save as PDF".
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- ==========================================================================
+       JAVASCRIPT
+       ========================================================================== -->
+  <script>
+    function filterManual() {
+      const query = document.getElementById('manualSearch').value.toLowerCase().trim();
+      const sections = document.querySelectorAll('.manual-section');
+      
+      sections.forEach(sec => {
+        const text = sec.innerText.toLowerCase();
+        if (text.includes(query) || query === '') {
+          sec.style.display = 'block';
+        } else {
+          sec.style.display = 'none';
+        }
+      });
+    }
+
+    function switchView(role, btn) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      const sections = document.querySelectorAll('.manual-section');
+      sections.forEach(sec => {
+        const secRole = sec.getAttribute('data-role');
+        if (role === 'all' || secRole === role || secRole === 'all' || secRole === 'universal') {
+          sec.style.display = 'block';
+        } else {
+          sec.style.display = 'none';
+        }
+      });
+      
+      document.querySelector('.manual-wrapper').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle('dark-mode');
+      const icon = document.getElementById('themeIcon');
+      if (document.body.classList.contains('dark-mode')) {
+        icon.innerText = 'light_mode';
+      } else {
+        icon.innerText = 'dark_mode';
+      }
+    }
+
+    function toggleFaq(header) {
+      const item = header.parentElement;
+      item.classList.toggle('open');
+    }
+
+    window.addEventListener('scroll', () => {
+      const sections = document.querySelectorAll('.manual-section');
+      const navLinks = document.querySelectorAll('.toc-link');
+      let current = '';
+
+      sections.forEach(sec => {
+        const secTop = sec.offsetTop;
+        if (pageYOffset >= secTop - 150) {
+          current = sec.getAttribute('id');
+        }
+      });
+
+      navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === `#${current}`) {
+          link.classList.add('active');
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>

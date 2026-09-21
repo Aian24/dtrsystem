@@ -1,3 +1,4 @@
+from __future__ import annotations
 from nicegui import ui
 from datetime import datetime, date
 import calendar
@@ -8,6 +9,7 @@ from app.components.notifications import toast_success, toast_error
 from app.theme.icons import IC
 from app.core.database import SessionLocal
 from app.core.models import CutoffPeriod, Company
+from app.components.search_select import search_select
 
 def _get_companies():
     db = SessionLocal()
@@ -66,7 +68,7 @@ def confirm_delete_cutoff(cutoff_ids: list[int], name: str, on_success=None):
             
             with ui.row().classes("w-full justify-end"):
                 ui.button("Cancel", on_click=dialog.close).classes("btn btn-secondary")
-                ui.button("Delete", on_click=lambda: [dialog.close(), delete_cutoffs(cutoff_ids, on_success)]).classes("btn").style("background-color: #ef4444 !important; color: white !important;")
+                ui.button("Delete", on_click=lambda: [dialog.close(), delete_cutoffs(cutoff_ids, on_success)]).classes("btn btn-danger")
     dialog.open()
 
 def open_edit_dialog(row, on_success):
@@ -74,7 +76,9 @@ def open_edit_dialog(row, on_success):
     form = {}
 
     def content(dialog):
-        form["company"] = ui.select({c.id: c.name for c in companies}, value=row["company_id"], label="Company *").props("outlined dense").style("width:100%;margin-bottom:14px;")
+        form["company"] = search_select(
+            {c.id: c.name for c in companies}, value=row["company_id"], label="Company *"
+        ).props("outlined dense options-dense").style("width:100%;margin-bottom:14px;")
         form["label"] = ui.input("Label *", value=row["label"]).props("outlined dense").style("width:100%;margin-bottom:8px;")
         with ui.element("div").classes("grid-cols-2"):
             form["start"] = ui.number("Start Day *", value=row["start_day"], min=1, max=31).props('outlined dense').style("width:100%;")
@@ -103,11 +107,25 @@ def open_edit_dialog(row, on_success):
 
 
 def cutoffs_page():
-    table_state = {"search": "", "page": 1, "limit": 10}
+    table_state = {
+        "search": "",
+        "company": 0,
+        "period_type": "all",
+        "page": 1,
+        "limit": 10
+    }
     
     @ui.refreshable
     def history_container():
         cutoffs = _get_cutoffs()
+        companies = _get_companies()
+        company_options = {0: "— All Companies —", **{c.id: c.name for c in companies}}
+        period_options = {
+            "all": "— All Periods —",
+            "1-15": "1st Period (1st – 15th)",
+            "16-eom": "2nd Period (16th – EoM)",
+            "custom": "Custom Ranges"
+        }
         
         selected_rows = set()
         checkboxes = []
@@ -134,12 +152,13 @@ def cutoffs_page():
             confirm_delete_cutoff(list(selected_rows), f"{len(selected_rows)} selected cutoffs", handle_success)
 
         def open_add_dialog():
-            companies = _get_companies()
             form = {}
 
             def content(dialog):
                 ui.html('<div style="font-size:13px; color:var(--text-secondary); margin-bottom: 16px; line-height: 1.5;">Configure generic cutoff rules for this company. Use <b>31</b> as the End Day to represent the End of the Month.</div>')
-                form["company"] = ui.select({c.id: c.name for c in companies}, label="Company *").props("outlined dense").style("width:100%;margin-bottom:14px;")
+                form["company"] = search_select(
+                    {c.id: c.name for c in companies}, label="Company *"
+                ).props("outlined dense options-dense").style("width:100%;margin-bottom:14px;")
                 
                 ui.html('<div style="font-weight: 600; margin-bottom: 8px; color: var(--text-primary);">Period 1 (e.g. 1st-15th)</div>')
                 form["label1"] = ui.input("Label *", placeholder="1st to 15th").props("outlined dense").style("width:100%;margin-bottom:8px;")
@@ -202,8 +221,7 @@ def cutoffs_page():
                 
                 bulk_actions = ui.element("div").style("display: none;")
                 with bulk_actions:
-                    bulk_btn = ui.button("Delete Selected", icon=IC.DELETE, on_click=trigger_bulk_delete)
-                    bulk_btn.props("size=sm").style("background-color: #ef4444 !important; color: white !important;")
+                    bulk_btn = ui.button("Delete Selected", icon=IC.DELETE, on_click=trigger_bulk_delete).classes("btn btn-danger btn-sm")
 
             def update_bulk_actions():
                 if len(selected_rows) > 0:
@@ -212,31 +230,89 @@ def cutoffs_page():
                 else:
                     bulk_actions.style("display: none;")
 
-            with ui.element("div").style("padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); gap: 16px; flex-wrap: wrap;"):
-                with ui.element("div").style("display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted);"):
-                    ui.html("<span>Show</span>")
-                    def update_limit(e):
-                        table_state["limit"] = e.value
+            # ── Multi-criteria Filter Bar ──────────────────────────────────────────
+            with ui.element("div").style(
+                "padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; "
+                "border-bottom: 1px solid var(--border); gap: 12px; flex-wrap: wrap; background: var(--bg-subtle);"
+            ):
+                with ui.element("div").style("display: flex; align-items: center; gap: 10px; flex-wrap: wrap; flex: 1;"):
+                    # Show entries
+                    with ui.element("div").style("display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-muted);"):
+                        ui.html("<span>Show</span>")
+                        def update_limit(e):
+                            table_state["limit"] = e.value
+                            table_state["page"] = 1
+                            table_content.refresh()
+                        ui.select(options=[10, 25, 50, 100], value=table_state["limit"], on_change=update_limit).props('dense outlined options-dense').style("width: 75px;")
+
+                    # Company Filter
+                    def update_co_filter(e):
+                        table_state["company"] = e.value
                         table_state["page"] = 1
                         table_content.refresh()
-                    ui.select(options=[10, 25, 50, 100], value=table_state["limit"], on_change=update_limit).props('dense outlined').style("width: 70px;")
-                    ui.html("<span>entries</span>")
-                    
-                with ui.element("div"):
+                    co_filter_sel = search_select(
+                        options=company_options,
+                        value=table_state["company"],
+                        on_change=update_co_filter,
+                        label="Company",
+                    ).props('dense outlined options-dense').style("min-width: 170px;")
+
+                    # Period Type Filter
+                    def update_period_filter(e):
+                        table_state["period_type"] = e.value
+                        table_state["page"] = 1
+                        table_content.refresh()
+                    period_filter_sel = search_select(
+                        options=period_options,
+                        value=table_state["period_type"],
+                        on_change=update_period_filter,
+                        label="Period Type",
+                    ).props('dense outlined options-dense').style("min-width: 170px;")
+
+                with ui.element("div").style("display: flex; align-items: center; gap: 8px; flex-wrap: wrap;"):
                     def update_search(e):
                         val = e.value or ""
                         if table_state["search"] != val:
                             table_state["search"] = val
                             table_state["page"] = 1
                             table_content.refresh()
-                    ui.input(placeholder="Search...", value=table_state["search"], on_change=update_search).props('dense outlined clearable').style("width: 250px;")
+                    search_inp = ui.input(placeholder="Search cutoffs...", value=table_state["search"], on_change=update_search).props('dense outlined clearable').style("width: 220px;")
+
+                    # Reset filters button
+                    def reset_filters():
+                        table_state["search"] = ""
+                        table_state["company"] = 0
+                        table_state["period_type"] = "all"
+                        table_state["page"] = 1
+                        search_inp.value = ""
+                        co_filter_sel.value = 0
+                        period_filter_sel.value = "all"
+                        table_content.refresh()
+
+                    ui.button("Reset", icon="filter_alt_off", on_click=reset_filters).classes("btn btn-reset btn-sm").tooltip("Clear all filters")
 
             with ui.element("div").classes("card-body").style("padding: 0; overflow-x: auto;"):
                 @ui.refreshable
                 def table_content():
                     import math
-                    term = table_state["search"].lower()
-                    filtered_cutoffs = [c for c in cutoffs if term in c['company'].lower() or term in c['label'].lower()] if term else cutoffs
+                    term = table_state["search"].lower().strip()
+                    sel_co = table_state["company"]
+                    sel_pt = table_state["period_type"]
+
+                    filtered_cutoffs = cutoffs
+                    # 1. Search term
+                    if term:
+                        filtered_cutoffs = [c for c in filtered_cutoffs if term in c['company'].lower() or term in c['label'].lower()]
+                    # 2. Company filter
+                    if sel_co and sel_co != 0:
+                        filtered_cutoffs = [c for c in filtered_cutoffs if c['company_id'] == sel_co]
+                    # 3. Period type filter
+                    if sel_pt == "1-15":
+                        filtered_cutoffs = [c for c in filtered_cutoffs if c['start_day'] == 1 and c['end_day'] == 15]
+                    elif sel_pt == "16-eom":
+                        filtered_cutoffs = [c for c in filtered_cutoffs if c['start_day'] == 16 and c['end_day'] in (30, 31)]
+                    elif sel_pt == "custom":
+                        filtered_cutoffs = [c for c in filtered_cutoffs if not ((c['start_day'] == 1 and c['end_day'] == 15) or (c['start_day'] == 16 and c['end_day'] in (30, 31)))]
                 
                     total_items = len(filtered_cutoffs)
                     total_pages = math.ceil(total_items / table_state["limit"]) or 1
@@ -247,13 +323,14 @@ def cutoffs_page():
                     end_idx = start_idx + table_state["limit"]
                     paged_cutoffs = filtered_cutoffs[start_idx:end_idx]
 
+                    checkboxes.clear()
 
                     if not filtered_cutoffs:
                         ui.html('''
                         <div class="empty-state">
                           <span class="material-icons-round">date_range</span>
-                          <div class="empty-state-title">No cutoffs found</div>
-                          <div class="empty-state-subtitle">Configure your first cutoff rules to get started.</div>
+                          <div class="empty-state-title">No cutoffs match your filters</div>
+                          <div class="empty-state-subtitle">Try adjusting your search criteria or resetting filters.</div>
                         </div>
                         ''')
                     else:
@@ -269,32 +346,33 @@ def cutoffs_page():
                                 for c in paged_cutoffs:
                                     with ui.element("tr"):
                                         with ui.element("td").style("text-align: center;"):
-                                            cb = ui.checkbox(on_change=lambda ev, rid=c["id"]: toggle_row(rid, ev.value))
+                                            cb = ui.checkbox(value=c["id"] in selected_rows, on_change=lambda ev, rid=c["id"]: toggle_row(rid, ev.value))
                                             checkboxes.append(cb)
                                         with ui.element("td"):
                                             ui.html(c["company"])
                                         with ui.element("td"):
                                             ui.html(f'<strong>{c["label"]}</strong>')
                                         with ui.element("td"):
-                                            ui.html(f'Day {c["start_day"]}')
+                                            ui.html(f'<span class="badge badge-info">Day {c["start_day"]}</span>')
                                         with ui.element("td"):
-                                            ed = "EoM" if c["end_day"] == 31 else f'Day {c["end_day"]}'
-                                            ui.html(ed)
+                                            ed = "End of Month" if c["end_day"] == 31 else f'Day {c["end_day"]}'
+                                            ui.html(f'<span class="badge badge-gray">{ed}</span>')
                                         with ui.element("td"):
                                             with ui.element("div").style("display:flex; gap: 8px; align-items: center;"):
                                                 ui.button(
                                                     icon=IC.EDIT, 
                                                     on_click=lambda c=c: open_edit_dialog(c, handle_success)
-                                                ).props('flat round size=sm color="primary"').tooltip("Edit Cutoff")
+                                                ).classes("action-btn-edit").props('flat round dense').tooltip("Edit Cutoff")
                                                 ui.button(
                                                     icon=IC.DELETE, 
                                                     on_click=lambda c=c: confirm_delete_cutoff([c["id"]], c["label"], handle_success)
-                                                ).props('flat round size=sm color="negative"').style("color: #ef4444 !important;").tooltip("Delete Cutoff")
+                                                ).classes("action-btn-delete").props('flat round dense').tooltip("Delete Cutoff")
 
                     with ui.element("div").style("padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 16px;"):
                         showing_start = start_idx + 1 if total_items > 0 else 0
                         showing_end = min(end_idx, total_items)
-                        ui.html(f'<span style="font-size: 13px; color: var(--text-muted);">Showing {showing_start} to {showing_end} of {total_items} entries</span>')
+                        filtered_text = f" (filtered from {len(cutoffs)} total)" if total_items != len(cutoffs) else ""
+                        ui.html(f'<span style="font-size: 13px; color: var(--text-muted);">Showing {showing_start} to {showing_end} of {total_items} entries{filtered_text}</span>')
                     
                         def update_page(e):
                             table_state["page"] = e.value

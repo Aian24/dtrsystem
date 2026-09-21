@@ -8,6 +8,7 @@ Rules:
   - Late = Time In > (work_start + grace_period)
   - Absent = no logs for that calendar day
 """
+from __future__ import annotations
 from datetime import date, datetime, time, timedelta
 from typing import Optional
 

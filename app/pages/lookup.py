@@ -1,6 +1,7 @@
 """
 DTR Lookup Page — Search employee & generate DTR preview
 """
+from __future__ import annotations
 from nicegui import ui
 from datetime import date, timedelta
 
@@ -9,6 +10,8 @@ from app.theme.icons import IC
 from app.core.database import SessionLocal
 from app.core.models import Employee, Company, CutoffPeriod
 from app.components.notifications import toast_error
+from app.components.search_select import search_select
+from app.components.date_picker import modern_date_picker
 
 
 def lookup_page():
@@ -73,18 +76,18 @@ def lookup_page():
 
                         # Company select
                         ui.html('<div class="form-label">Company</div>')
-                        company_sel = ui.select(
+                        company_sel = search_select(
                             options={0: "— All Companies —", **companies},
                             value=0,
-                        ).props("outlined dense").style("width:100%;margin-bottom:14px;")
+                        ).props("outlined dense options-dense").style("width:100%;margin-bottom:14px;")
 
                         # Employee select
                         ui.html('<div class="form-label" style="margin-top:4px;">Employee</div>')
                         emp_options = {"": "— Select Employee —"}
-                        employee_sel = ui.select(
+                        employee_sel = search_select(
                             options=emp_options,
                             value="",
-                        ).props("outlined dense").style("width:100%;margin-bottom:14px;")
+                        ).props("outlined dense options-dense").style("width:100%;margin-bottom:14px;")
 
                         # Cutoff vs Date Range toggle
                         use_cutoff_chk = ui.checkbox("Use Cutoff Period").style("margin-bottom:10px;")
@@ -93,16 +96,16 @@ def lookup_page():
                         date_section = ui.element("div")
                         with date_section:
                             ui.html('<div class="form-label">Date From</div>')
-                            date_from = ui.input(
+                            date_from = modern_date_picker(
                                 value=form_state["date_from"],
                                 placeholder="YYYY-MM-DD"
-                            ).props("outlined dense type=date").style("width:100%;margin-bottom:10px;")
+                            ).style("width:100%;margin-bottom:10px;")
 
                             ui.html('<div class="form-label">Date To</div>')
-                            date_to = ui.input(
+                            date_to = modern_date_picker(
                                 value=form_state["date_to"],
                                 placeholder="YYYY-MM-DD"
-                            ).props("outlined dense type=date").style("width:100%;")
+                            ).style("width:100%;")
 
                         # Cutoff section (hidden by default)
                         cutoff_section = ui.element("div").style("display:none;")
@@ -116,10 +119,10 @@ def lookup_page():
                             ).props("outlined dense type=month").style("width:100%;margin-bottom:10px;")
 
                             ui.html('<div class="form-label">Cutoff Period</div>')
-                            cutoff_sel = ui.select(
+                            cutoff_sel = search_select(
                                 options={"": "— Select Cutoff —"},
                                 value="",
-                            ).props("outlined dense").style("width:100%;")
+                            ).props("outlined dense options-dense").style("width:100%;")
 
                         def on_company_change(e):
                             cid = getattr(e, 'value', e.sender.value) if getattr(e, 'value', e.sender.value) != 0 else None
@@ -184,11 +187,11 @@ def lookup_page():
 
                         with ui.element("div").style("display:flex;gap:8px;margin-top:16px;"):
                             with ui.element("button").classes("btn btn-primary").style("flex:1;").on("click", do_preview):
-                                ui.html(f'<span class="material-icons-round" style="font-size:15px;">{IC.LOOKUP}</span> Preview DTR')
-                            with ui.element("button").classes("btn btn-secondary").on(
+                                ui.html(f'<span class="material-icons-round" style="font-size:16px;">{IC.LOOKUP}</span> Preview DTR')
+                            with ui.element("button").classes("btn btn-reset").on(
                                 "click", lambda: company_sel.set_value(0)
-                            ):
-                                ui.html(f'<span class="material-icons-round" style="font-size:15px;">{IC.CANCEL}</span>')
+                            ).tooltip("Reset Filter"):
+                                ui.html(f'<span class="material-icons-round" style="font-size:16px;">filter_alt_off</span>')
 
             # ── Right: Instructions / Recent ──────────────────────────────────
             with ui.element("div"):

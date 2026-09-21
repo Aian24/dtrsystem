@@ -3,6 +3,7 @@ Material Icons Round — Named constants for all icons used in the app.
 Usage: from app.theme.icons import IC
        ui.html(f'<span class="material-icons-round">{IC.DASHBOARD}</span>')
 """
+from __future__ import annotations
 
 
 class IC:

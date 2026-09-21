@@ -1,6 +1,7 @@
 """
 Shared page layout helper — wraps content with sidebar + navbar
 """
+from __future__ import annotations
 from nicegui import ui
 from app.components.sidebar import sidebar
 from app.components.navbar import navbar

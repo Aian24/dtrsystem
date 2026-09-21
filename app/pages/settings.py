@@ -1,6 +1,7 @@
 """
 Settings Page — Application configuration and preferences
 """
+from __future__ import annotations
 from nicegui import ui
 
 from app.pages.layout import app_layout
@@ -8,6 +9,7 @@ from app.theme.icons import IC
 from app.components.modals import form_dialog
 from app.components.notifications import toast_success, toast_error
 from app.services.settings_service import get_app_config, update_app_config
+from app.components.search_select import search_select
 import base64
 
 from datetime import datetime
@@ -185,3 +187,209 @@ def settings_page():
                             ui.button('Edit Configuration', icon='edit', on_click=open_edit_config).classes("btn btn-primary")
                 
                 render_app_info()
+
+        # ── Biometric Device Configuration ──────────────────────────────────────────────────
+        with ui.element("div").classes("card").style("margin-top: 24px;"):
+            with ui.element("div").classes("card-header"):
+                ui.html(f'<span class="card-title"><span class="material-icons-round" style="font-size:16px;vertical-align:middle;margin-right:6px;">fingerprint</span>IntelliSmart / Biometric Device Settings</span>')
+            
+            with ui.element("div").classes("card-body").style("display:flex; flex-direction: column; gap: 20px;") as bio_container:
+                
+                def render_bio_settings():
+                    bio_container.clear()
+                    cfg = get_app_config()
+                    from app.services.biometric_service import test_device_connection, discover_biometric_devices, clear_device_attendance, get_device_log_count
+                    from app.services.settings_service import update_biometric_config
+                    import asyncio
+
+                    with bio_container:
+                        ui.html('''
+                        <div style="font-size:13.5px;color:var(--text-secondary);line-height:1.5;">
+                          Configure your <strong>IntelliSmart / ZKTeco</strong> biometric fingerprint terminal for direct network synchronization over LAN/Wi-Fi (Port 4370).
+                        </div>
+                        ''')
+
+                        with ui.element("div").style("display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;"):
+                            # IP Input with Auto-Detect
+                            with ui.element("div").style("display: flex; gap: 8px; align-items: flex-start;"):
+                                ip_input = ui.input("Device IP Address *", value=cfg.get("biometric_ip", "192.168.1.2")).props("outlined dense").style("flex:1;")
+                                auto_btn = ui.button("Auto-Detect", icon="radar").classes("btn btn-secondary btn-sm").style("margin-top:2px;white-space:nowrap;")
+
+                            # Port Input
+                            port_input = ui.number("Port", value=cfg.get("biometric_port", 4370)).props("outlined dense").style("width:100%;")
+                            
+                            # Comm Key / Password
+                            key_input = ui.input("Comm Key", value=str(cfg.get("biometric_comm_key", "0"))).props("outlined dense").style("width:100%;")
+                            
+                            # Protocol
+                            proto_select = search_select(["UDP", "TCP"], value=cfg.get("biometric_protocol", "UDP"), label="Protocol").props("outlined dense options-dense").style("width:100%;")
+
+                        test_status = ui.html('<div style="font-size:13px;color:var(--text-muted);">Status: Ready to test connection</div>')
+
+                        async def handle_auto_detect():
+                            test_status.content = '<div style="font-size:13px;color:#2563eb;font-weight:600;"><span class="material-icons-round" style="font-size:14px;vertical-align:middle;animation:spin 1s linear infinite;">radar</span> Scanning network for biometric terminals…</div>'
+                            auto_btn.props('loading')
+                            await asyncio.sleep(0.1)
+
+                            loop = asyncio.get_event_loop()
+                            import concurrent.futures
+                            with concurrent.futures.ThreadPoolExecutor() as pool:
+                                devices = await loop.run_in_executor(pool, discover_biometric_devices)
+
+                            auto_btn.props(remove='loading')
+                            if devices:
+                                first_ip = devices[0]["ip"]
+                                first_proto = devices[0].get("protocol", "UDP")
+                                ip_input.value = first_ip
+                                proto_select.value = first_proto
+                                test_status.content = f'<div style="font-size:13px;color:#10b981;font-weight:600;"><span class="material-icons-round" style="font-size:14px;vertical-align:middle;">check_circle</span> Found device at <strong>{first_ip}</strong> ({first_proto})</div>'
+                                toast_success("Device Found", f"Auto-detected biometric device at {first_ip}")
+                            else:
+                                test_status.content = '<div style="font-size:13px;color:#d97706;font-weight:600;"><span class="material-icons-round" style="font-size:14px;vertical-align:middle;">search_off</span> No device found automatically. Check LAN cable.</div>'
+                                toast_error("Not Found", "No biometric terminal responded on the network.")
+
+                        auto_btn.on("click", handle_auto_detect)
+
+                        with ui.element("div").style("display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 12px;"):
+                            async def handle_test_conn():
+                                test_status.content = '<div style="font-size:13px;color:#2563eb;font-weight:600;"><span class="material-icons-round" style="font-size:14px;vertical-align:middle;animation:spin 1s linear infinite;">sync</span> Testing connection to device…</div>'
+                                ip = ip_input.value.strip()
+                                port = int(port_input.value or 4370)
+                                raw_k = str(key_input.value or '0').strip()
+                                key = int(raw_k) if raw_k.isdigit() else 0
+                                proto = str(proto_select.value or 'UDP')
+
+                                await asyncio.sleep(0.1)
+
+                                def run_test():
+                                    return test_device_connection(ip, port, key, proto)
+
+                                import concurrent.futures
+                                loop = asyncio.get_event_loop()
+                                with concurrent.futures.ThreadPoolExecutor() as pool:
+                                    ok, msg = await loop.run_in_executor(pool, run_test)
+
+                                if ok:
+                                    test_status.content = f'<div style="font-size:13px;color:#10b981;font-weight:600;"><span class="material-icons-round" style="font-size:14px;vertical-align:middle;">check_circle</span> {msg}</div>'
+                                    toast_success("Connected", f"Connected to {ip}:{port}")
+                                else:
+                                    test_status.content = f'<div style="font-size:13px;color:#ef4444;font-weight:600;"><span class="material-icons-round" style="font-size:14px;vertical-align:middle;">error</span> {msg}</div>'
+                                    toast_error("Connection Failed", msg)
+
+                            def handle_clear_device():
+                                ip = ip_input.value.strip()
+                                if not ip:
+                                    toast_error("Error", "Device IP is required.")
+                                    return
+                                port = int(port_input.value or 4370)
+                                raw_k = str(key_input.value or '0').strip()
+                                key = int(raw_k) if raw_k.isdigit() else 0
+                                proto = str(proto_select.value or 'UDP')
+
+                                with ui.dialog().classes('backdrop-blur-sm') as clear_dlg:
+                                    clear_dlg.props('persistent')
+                                    with ui.card().style("width: 460px; max-width: 90vw; padding: 24px; border-radius: 16px;"):
+                                        ui.html(f'''
+                                        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+                                          <div style="width:40px;height:40px;border-radius:10px;background:#FEE2E2;color:#EF4444;display:flex;align-items:center;justify-content:center;">
+                                            <span class="material-icons-round" style="font-size:24px;">delete_forever</span>
+                                          </div>
+                                          <div>
+                                            <div style="font-size:16.5px;font-weight:700;color:#1E293B;">Clear Biometric Device Memory</div>
+                                            <div style="font-size:12px;color:#64748B;">Target Device: {ip}:{port} ({proto})</div>
+                                          </div>
+                                        </div>
+                                        ''')
+
+                                        count_badge = ui.html('''
+                                        <div style="display:flex;align-items:center;gap:8px;padding:9px 12px;background:#EFF6FF;border-radius:8px;border:1px solid #DBEAFE;margin-bottom:12px;font-size:12.5px;color:#2563EB;">
+                                          <span class="material-icons-round" style="font-size:16px;animation:spin 1s linear infinite;">sync</span>
+                                          <span>Querying device for stored punch records...</span>
+                                        </div>
+                                        ''')
+
+                                        ui.html('''
+                                        <div style="font-size:13px;color:#475569;line-height:1.5;margin-bottom:14px;">
+                                          Are you sure you want to clear all punch logs on the physical machine?
+                                          <div style="margin-top:10px;padding:10px 12px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;font-size:12px;color:#92400E;line-height:1.4;display:flex;align-items:flex-start;gap:8px;">
+                                            <span class="material-icons-round" style="font-size:18px;color:#D97706;flex-shrink:0;">warning</span>
+                                            <div><strong>Warning:</strong> Make sure you have synced or backed up your records in DTRSYS first. User PINs and fingerprint templates will <strong>NOT</strong> be deleted.</div>
+                                          </div>
+                                        </div>
+                                        ''')
+                                        with ui.element("div").style("display:flex;justify-content:flex-end;gap:8px;margin-top:8px;"):
+                                            ui.button("Cancel", on_click=clear_dlg.close).props("flat dense color=grey-8").style("padding:6px 16px;text-transform:none;")
+                                            
+                                            async def do_clear():
+                                                clear_dlg.close()
+                                                test_status.content = '<div style="font-size:13px;color:#ef4444;font-weight:600;"><span class="material-icons-round" style="font-size:14px;vertical-align:middle;animation:spin 1s linear infinite;">sync</span> Purging punch logs on biometric machine…</div>'
+                                                await asyncio.sleep(0.1)
+
+                                                import concurrent.futures
+                                                loop = asyncio.get_event_loop()
+                                                with concurrent.futures.ThreadPoolExecutor() as pool:
+                                                    ok, msg = await loop.run_in_executor(pool, lambda: clear_device_attendance(ip, port, key, proto))
+
+                                                if ok:
+                                                    test_status.content = f'<div style="font-size:13px;color:#10b981;font-weight:600;"><span class="material-icons-round" style="font-size:14px;vertical-align:middle;">check_circle</span> {msg}</div>'
+                                                    toast_success("Logs Cleared", msg)
+                                                else:
+                                                    test_status.content = f'<div style="font-size:13px;color:#ef4444;font-weight:600;"><span class="material-icons-round" style="font-size:14px;vertical-align:middle;">error</span> {msg}</div>'
+                                                    toast_error("Clear Failed", msg)
+
+                                            action_btn = ui.button("Yes, Clear Machine Logs", on_click=do_clear).props("unelevated dense color=negative").style("padding:6px 16px;text-transform:none;font-weight:600;background:#EF4444 !important;color:#fff !important;")
+
+                                        async def fetch_settings_count_async():
+                                            await asyncio.sleep(0.05)
+                                            loop = asyncio.get_event_loop()
+                                            import concurrent.futures
+                                            with concurrent.futures.ThreadPoolExecutor() as pool:
+                                                ok, rec_count, msg = await loop.run_in_executor(pool, lambda: get_device_log_count(ip, port, key, proto))
+                                            if ok:
+                                                if rec_count > 0:
+                                                    count_badge.content = f'''
+                                                    <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:#FEE2E2;border-radius:8px;border:1px solid #FECACA;margin-bottom:12px;font-size:13px;color:#991B1B;">
+                                                      <span class="material-icons-round" style="font-size:20px;color:#EF4444;">receipt_long</span>
+                                                      <div><strong>{rec_count:,} punch logs</strong> currently stored on machine</div>
+                                                    </div>
+                                                    '''
+                                                    action_btn.set_text(f"Yes, Clear {rec_count:,} Records")
+                                                else:
+                                                    count_badge.content = '''
+                                                    <div style="display:flex;align-items:center;gap:8px;padding:9px 12px;background:#F0FDF4;border-radius:8px;border:1px solid #DCFCE7;margin-bottom:12px;font-size:12.5px;color:#15803D;">
+                                                      <span class="material-icons-round" style="font-size:18px;color:#16A34A;">check_circle</span>
+                                                      <span>Device attendance log buffer is currently empty (0 records).</span>
+                                                    </div>
+                                                    '''
+                                                    action_btn.set_text("Clear Device (0 Records)")
+                                            else:
+                                                count_badge.content = f'''
+                                                <div style="padding:8px 12px;background:#F1F5F9;border-radius:8px;border:1px solid #E2E8F0;margin-bottom:12px;font-size:12px;color:#64748B;">
+                                                  Device reachable. Proceeding will wipe all attendance records on the machine.
+                                                </div>
+                                                '''
+
+                                        asyncio.create_task(fetch_settings_count_async())
+                                clear_dlg.open()
+
+                            def handle_save_bio():
+                                ip = ip_input.value.strip()
+                                if not ip:
+                                    toast_error("Error", "Device IP is required.")
+                                    return
+                                port = int(port_input.value or 4370)
+                                raw_k = str(key_input.value or '0').strip()
+                                proto = str(proto_select.value or 'UDP')
+
+                                if update_biometric_config(ip, port, raw_k, proto):
+                                    toast_success("Saved", "Biometric device settings saved.")
+                                else:
+                                    toast_error("Error", "Failed to save biometric settings.")
+
+                            with ui.element("div").style("display:flex; gap:10px; flex-wrap:wrap;"):
+                                ui.button("Test Connection", icon="wifi", on_click=handle_test_conn).classes("btn btn-secondary")
+                                ui.button("Clear Machine Logs", icon="delete_sweep", on_click=handle_clear_device).classes("btn btn-danger btn-sm")
+                            
+                            ui.button("Save Device Settings", icon="save", on_click=handle_save_bio).classes("btn btn-primary")
+
+                render_bio_settings()

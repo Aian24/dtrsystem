@@ -1,6 +1,7 @@
 """
 Dashboard Page — Statistics, Charts, Quick Actions
 """
+from __future__ import annotations
 from nicegui import ui
 from datetime import date, datetime
 

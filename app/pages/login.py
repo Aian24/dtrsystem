@@ -1,6 +1,7 @@
 """
 Login Page — Glassmorphism dark card with animated background orbs
 """
+from __future__ import annotations
 from nicegui import ui, app as ngapp
 from app.services.auth_service import authenticate_user, create_session
 from app.components.notifications import toast_error
@@ -11,16 +12,6 @@ def login_page():
     from app.theme.styles import FONT_LINK, GLOBAL_CSS, GLOBAL_JS
     ui.html(f"{FONT_LINK}<style>{GLOBAL_CSS}</style>").classes("hidden")
     ui.add_body_html(f"<script>{GLOBAL_JS}</script>")
-
-    ui.html("""
-    <style>
-      body { background: #0F172A !important; }
-      .q-field__control { background: rgba(255,255,255,.06) !important; border-radius: 10px !important; }
-      .q-field__native, .q-field__label { color: #F1F5F9 !important; }
-      .q-field--outlined .q-field__control:before { border-color: rgba(255,255,255,.15) !important; }
-      .q-field--focused .q-field__control:before  { border-color: #3B82F6 !important; }
-    </style>
-    """)
 
     with ui.element("div").classes("login-bg"):
         # Background orbs
@@ -70,18 +61,18 @@ def login_page():
             # Form
             form_data = {"username": "", "password": "", "show_pw": False}
 
+            ui.html('<div style="color:#CBD5E1;font-size:12.5px;font-weight:600;margin-bottom:6px;letter-spacing:0.3px;">Username</div>')
             username_input = ui.input(
-                label="Username",
                 placeholder="Enter your username"
-            ).props('outlined color="blue-6"').style("width:100%;margin-bottom:14px;")
+            ).classes("login-input").props('outlined').style("width:100%;margin-bottom:16px;")
             username_input.on("keydown.enter", lambda: pw_input.run_method("focus"))
 
+            ui.html('<div style="color:#CBD5E1;font-size:12.5px;font-weight:600;margin-bottom:6px;letter-spacing:0.3px;">Password</div>')
             pw_input = ui.input(
-                label="Password",
                 placeholder="Enter your password",
                 password=True,
                 password_toggle_button=True,
-            ).props('outlined color="blue-6"').style("width:100%;margin-bottom:24px;")
+            ).classes("login-input").props('outlined').style("width:100%;margin-bottom:24px;")
 
             # Login button
             btn_container = ui.element("div").style("width:100%;")
@@ -114,9 +105,7 @@ def login_page():
             pw_input.on("keydown.enter", do_login)
 
             with btn_container:
-                login_btn = ui.button("Sign In", on_click=do_login).props(
-                    'color="blue-6" unelevated'
-                ).style(
+                login_btn = ui.button("Sign In", on_click=do_login).classes("btn btn-primary").style(
                     "width:100%;height:46px;font-size:15px;font-weight:700;"
                     "border-radius:10px;letter-spacing:.2px;"
                 )

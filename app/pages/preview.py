@@ -1,6 +1,7 @@
 """
-DTR Preview Page — Read-only, printable DTR report
+DTR Preview Page — Read-only, printable DTR report with configurable signatures
 """
+from __future__ import annotations
 from nicegui import ui
 from datetime import date, datetime, timedelta
 
@@ -69,14 +70,11 @@ def preview_page(request=None, is_public=False):
     finally:
         db.close()
 
-    # Summary totals (Keeping these in case they are needed elsewhere)
+    # Summary totals
     def has_any_punch(e):
         return any(e.get(k) for k in ["time_in", "break_out_1", "break_in_1", "break_out_2", "break_in_2", "time_out"])
 
     total_days      = sum(1 for e in dtr_entries if has_any_punch(e))
-    # Count as absent if no punches and not marked as Rest Day. (Assuming the backend populates "Absent" in remarks if truly absent)
-    # But wait, the user's remarks might be blanked out later, but right here we still have the raw DTR dict.
-    # Actually, dtr_service sets remarks to "Absent" if there are no logs and it's not a rest day.
     total_absents   = sum(1 for e in dtr_entries if not has_any_punch(e) and e.get("remarks") == "Absent")
     total_late      = sum(1 for e in dtr_entries if e.get("is_late"))
     total_late_mins = sum(e.get("late_minutes") or 0 for e in dtr_entries)
@@ -129,7 +127,7 @@ def preview_page(request=None, is_public=False):
             
             /* Keep the internal padding so the text doesn't touch the edges */
             .preview-card-body {
-                padding: 0 !important; /* we remove padding here since q-page has it */
+                padding: 0 !important;
             }
             
             /* Force the red rows to print their background */
@@ -189,11 +187,23 @@ def preview_page(request=None, is_public=False):
         middle_initial = f" {emp.middle_name[0].upper()}." if emp.middle_name else ""
         emp_full_name = f"{emp.last_name.upper()}, {emp.first_name.upper()}{middle_initial}"
 
+        # Editable signature state
+        sig_state = {
+            "appr1_name": company.area_manager if company and company.area_manager else "",
+            "appr1_title": "APPROVED BY",
+            "appr2_name": company.store_supervisor if company and company.store_supervisor else "",
+            "appr2_title": "APPROVED BY",
+            "emp_name": emp_full_name,
+            "emp_title": "EMPLOYEE SIGNATURE",
+        }
+
         # ── DTR Report Card ───────────────────────────────────────────────────
         with ui.element("div").classes("preview-card page-fade-in").style("max-width:900px; width:100%; margin:0 auto;"):
             with ui.element("div").classes("preview-card-body").style("padding:40px;"):
 
                 # Header
+                dept_part = f" - {emp.department.upper()}" if emp.department else ""
+                emp_header_info = f"{emp.emp_id} - {emp_full_name}{dept_part}"
                 ui.html(f'''
                 <div style="text-align:center; margin-bottom:16px;">
                     <div style="font-family:'Arial', sans-serif; font-size:18px; font-weight:900; color:#0A1931; text-transform:uppercase; line-height:1; margin-bottom:4px;">
@@ -209,17 +219,17 @@ def preview_page(request=None, is_public=False):
                 <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:16px; font-family:'Arial', sans-serif;">
                     <div>
                         <div style="font-size:10px; font-weight:700; color:#6B7280; letter-spacing:0.5px; margin-bottom:2px;">
-                            EMPLOYEE CODE & NAME
+                            EMPLOYEE ID - NAME - DEPARTMENT
                         </div>
                         <div style="font-size:13px; font-weight:800; color:#0A1931;">
-                            {emp.emp_id} / {emp_full_name}
+                            {emp_header_info}
                         </div>
                     </div>
                     <div style="text-align:right;">
                         <div style="font-size:10px; font-weight:700; color:#6B7280; letter-spacing:0.5px; margin-bottom:2px;">
                             PAYROLL PERIOD
                         </div>
-                        <div style="font-size:13px; font-weight:800; color:#0A1931;">
+                        <div style="font-size:13px; font-weight:800; color:#0A1931; white-space:nowrap;">
                             {period_label}
                         </div>
                     </div>
@@ -267,30 +277,38 @@ def preview_page(request=None, is_public=False):
                 
                 ui.html(table_html)
                 
-                # Signature
-                ui.html(f'''
-                <div style="display:flex; justify-content:space-between; margin-top:80px; padding: 0 40px; font-family:'Arial', sans-serif;">
-                    <div style="text-align:center;">
-                        <div style="font-size:12px; font-weight:700; color:#0A1931; text-transform:uppercase; margin-bottom:4px;">{(company.area_manager if company and company.area_manager else "&nbsp;")}</div>
-                        <div style="width:180px; border-bottom:1px solid #0A1931; margin-bottom:6px;"></div>
-                        <div style="font-size:10px; font-weight:800; color:#0A1931; text-transform:uppercase;">Area Manager</div>
-                    </div>
-                    <div style="text-align:center;">
-                        <div style="font-size:12px; font-weight:700; color:#0A1931; text-transform:uppercase; margin-bottom:4px;">{(company.store_supervisor if company and company.store_supervisor else "&nbsp;")}</div>
-                        <div style="width:180px; border-bottom:1px solid #0A1931; margin-bottom:6px;"></div>
-                        <div style="font-size:10px; font-weight:800; color:#0A1931; text-transform:uppercase;">Store Supervisor</div>
-                    </div>
-                    <div style="text-align:center;">
-                        <div style="font-size:12px; font-weight:700; color:#0A1931; text-transform:uppercase; margin-bottom:4px;">{emp_full_name}</div>
-                        <div style="width:180px; border-bottom:1px solid #0A1931; margin-bottom:6px;"></div>
-                        <div style="font-size:10px; font-weight:800; color:#0A1931; text-transform:uppercase;">Employee Signature</div>
-                    </div>
-                </div>
-                ''')
+                # Signatures Section (Refreshable upon edit)
+                @ui.refreshable
+                def render_signatures():
+                    appr1_display = sig_state["appr1_name"] if sig_state["appr1_name"] else "&nbsp;"
+                    appr2_display = sig_state["appr2_name"] if sig_state["appr2_name"] else "&nbsp;"
+                    emp_display   = sig_state["emp_name"] if sig_state["emp_name"] else "&nbsp;"
 
-                # Comprehensive Summary Block
+                    ui.html(f'''
+                    <div style="display:flex; justify-content:space-between; margin-top:80px; padding: 0 40px; font-family:'Arial', sans-serif;">
+                        <div style="text-align:center;">
+                            <div style="font-size:12px; font-weight:700; color:#0A1931; text-transform:uppercase; margin-bottom:4px;">{appr1_display}</div>
+                            <div style="width:180px; border-bottom:1px solid #0A1931; margin-bottom:6px;"></div>
+                            <div style="font-size:10px; font-weight:800; color:#0A1931; text-transform:uppercase;">{sig_state["appr1_title"]}</div>
+                        </div>
+                        <div style="text-align:center;">
+                            <div style="font-size:12px; font-weight:700; color:#0A1931; text-transform:uppercase; margin-bottom:4px;">{appr2_display}</div>
+                            <div style="width:180px; border-bottom:1px solid #0A1931; margin-bottom:6px;"></div>
+                            <div style="font-size:10px; font-weight:800; color:#0A1931; text-transform:uppercase;">{sig_state["appr2_title"]}</div>
+                        </div>
+                        <div style="text-align:center;">
+                            <div style="font-size:12px; font-weight:700; color:#0A1931; text-transform:uppercase; margin-bottom:4px;">{emp_display}</div>
+                            <div style="width:180px; border-bottom:1px solid #0A1931; margin-bottom:6px;"></div>
+                            <div style="font-size:10px; font-weight:800; color:#0A1931; text-transform:uppercase;">{sig_state["emp_title"]}</div>
+                        </div>
+                    </div>
+                    ''')
+
+                render_signatures()
+
+                # Comprehensive Summary Block (Hidden during print)
                 ui.html(f'''
-                <div style="margin-top:48px; padding-top:16px; border-top:1px solid #CBD5E1; font-family:'Arial', sans-serif;">
+                <div class="no-print" style="margin-top:48px; padding-top:16px; border-top:1px solid #CBD5E1; font-family:'Arial', sans-serif;">
                     <div style="font-size:10px; font-weight:800; color:#475569; margin-bottom:12px; letter-spacing:0.5px;">SUMMARY OF HOURS</div>
                     <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:12px; text-align:center;">
                         <div style="border:1px solid #E2E8F0; padding:10px; border-radius:6px; background:#F8FAFC;">
@@ -317,13 +335,79 @@ def preview_page(request=None, is_public=False):
                 </div>
                 ''')
 
+                # Edit Signatures Dialog Handler
+                def open_edit_signatures_dialog():
+                    with ui.dialog().classes('backdrop-blur-sm') as dlg:
+                        with ui.card().style("width: 540px; max-width: 92vw; padding: 24px; border-radius: 16px;"):
+                            ui.html('''
+                            <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
+                                <div style="width:40px;height:40px;border-radius:50%;background:rgba(37, 99, 235, 0.1);display:flex;align-items:center;justify-content:center;color:#2563eb;">
+                                    <span class="material-icons-round" style="font-size:24px;">draw</span>
+                                </div>
+                                <div>
+                                    <div style="font-size:18px;font-weight:700;color:var(--text-primary);">Edit Signatures & Approvers</div>
+                                    <div style="font-size:12px;color:var(--text-secondary);">Modify sign-off names and roles for this preview or save as company defaults.</div>
+                                </div>
+                            </div>
+                            ''')
+
+                            with ui.column().classes("w-full gap-3"):
+                                ui.html('<div style="font-size:13px; font-weight:700; color:var(--text-primary); margin-top:4px;">First Approver</div>')
+                                with ui.row().classes("w-full gap-2"):
+                                    inp_appr1_name = ui.input("Name", value=sig_state["appr1_name"]).props("outlined dense").classes("flex-1")
+                                    inp_appr1_title = ui.input("Title / Role", value=sig_state["appr1_title"]).props("outlined dense").classes("flex-1")
+
+                                ui.html('<div style="font-size:13px; font-weight:700; color:var(--text-primary); margin-top:8px;">Second Approver</div>')
+                                with ui.row().classes("w-full gap-2"):
+                                    inp_appr2_name = ui.input("Name", value=sig_state["appr2_name"]).props("outlined dense").classes("flex-1")
+                                    inp_appr2_title = ui.input("Title / Role", value=sig_state["appr2_title"]).props("outlined dense").classes("flex-1")
+
+                                ui.html('<div style="font-size:13px; font-weight:700; color:var(--text-primary); margin-top:8px;">Employee Signature</div>')
+                                with ui.row().classes("w-full gap-2"):
+                                    inp_emp_name = ui.input("Employee Name", value=sig_state["emp_name"]).props("outlined dense").classes("flex-1")
+                                    inp_emp_title = ui.input("Title / Role", value=sig_state["emp_title"]).props("outlined dense").classes("flex-1")
+
+                                save_default_cb = None
+                                if company:
+                                    save_default_cb = ui.checkbox(f"Save approver names as default for {company.name}", value=False).style("font-size:13px; margin-top:6px;")
+
+                            def apply_signatures():
+                                sig_state["appr1_name"] = (inp_appr1_name.value or "").strip()
+                                sig_state["appr1_title"] = (inp_appr1_title.value or "APPROVED BY").strip().upper()
+                                sig_state["appr2_name"] = (inp_appr2_name.value or "").strip()
+                                sig_state["appr2_title"] = (inp_appr2_title.value or "APPROVED BY").strip().upper()
+                                sig_state["emp_name"] = (inp_emp_name.value or "").strip()
+                                sig_state["emp_title"] = (inp_emp_title.value or "EMPLOYEE SIGNATURE").strip().upper()
+
+                                if company and save_default_cb and save_default_cb.value:
+                                    db_s = SessionLocal()
+                                    try:
+                                        co_rec = db_s.query(Company).filter(Company.id == company.id).first()
+                                        if co_rec:
+                                            co_rec.area_manager = sig_state["appr1_name"] or None
+                                            co_rec.store_supervisor = sig_state["appr2_name"] or None
+                                            db_s.commit()
+                                    finally:
+                                        db_s.close()
+
+                                render_signatures.refresh()
+                                dlg.close()
+
+                            with ui.row().classes("w-full justify-end gap-2").style("margin-top:20px;"):
+                                ui.button("Cancel", on_click=dlg.close).classes("btn btn-secondary")
+                                ui.button("Apply Changes", icon="check", on_click=apply_signatures).classes("btn btn-primary")
+
+                    dlg.open()
+
                 # Action Buttons
-                with ui.element("div").classes("no-print").style("margin-top:32px; padding-top:24px; border-top:1px dashed #CBD5E1; display:flex; justify-content:center; gap:12px;"):
+                with ui.element("div").classes("no-print").style("margin-top:32px; padding-top:24px; border-top:1px dashed #CBD5E1; display:flex; justify-content:center; align-items:center; gap:12px; flex-wrap:wrap;"):
                     with ui.element("button").classes("btn").style("background:#2563EB; color:#fff;").props('onclick="window.print()"'):
                         ui.html(f'<span class="material-icons-round" style="font-size:18px;">print</span> Print Sheet')
                     
+                    ui.button("Edit Signatures", icon="draw", on_click=open_edit_signatures_dialog).classes("btn btn-secondary").style("font-size:13px; font-weight:600; padding:8px 18px;").tooltip("Change approver names and titles on this sheet")
+
                     back_route = "/" if is_public else "/lookup"
-                    with ui.element("a").props(f'href="{back_route}"').classes("btn").style("background:#F8FAFC; color:#0F172A; border:1px solid #CBD5E1; text-decoration:none;"):
+                    with ui.element("a").props(f'href="{back_route}"').classes("btn").style("background:#F8FAFC; color:#0F172A; border:1px solid #CBD5E1; text-decoration:none; display:inline-flex; align-items:center; gap:6px;"):
                         ui.html(f'<span class="material-icons-round" style="font-size:18px;">arrow_back</span> Go Back')
 
     if is_public:

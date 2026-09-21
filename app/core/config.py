@@ -2,30 +2,55 @@
 DTR Management System
 Application Configuration
 """
+from __future__ import annotations
 import os
 from pathlib import Path
 
 # ─── Paths ──────────────────────────────────────────────────────────────────
 import sys
 
-if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
-    # Running in PyInstaller bundle
-    BASE_DIR = Path(sys._MEIPASS)
+if getattr(sys, 'frozen', False):
+    EXE_DIR = Path(sys.executable).resolve().parent
+    BASE_DIR = Path(getattr(sys, '_MEIPASS', EXE_DIR))
 else:
-    # Running in normal python environment
-    BASE_DIR = Path(__file__).resolve().parent.parent.parent
+    EXE_DIR = Path(__file__).resolve().parent.parent.parent
+    BASE_DIR = EXE_DIR
 
-DATA_DIR = BASE_DIR / "data"
+def _determine_data_dir() -> Path:
+    appdata = os.environ.get("LOCALAPPDATA") or os.environ.get("APPDATA") or str(Path.home())
+    fallback_dir = Path(appdata) / "DTR_Management_System" / "data"
+
+    if getattr(sys, 'frozen', False):
+        exe_dir = Path(sys.executable).resolve().parent
+    else:
+        exe_dir = Path(__file__).resolve().parent.parent.parent
+
+    # UNC paths (\\server\share) cannot host SQLite databases reliably via SMB locking
+    exe_str = str(exe_dir)
+    if exe_str.startswith(r"\\") or exe_str.startswith("//"):
+        return fallback_dir
+
+    local_data = exe_dir / "data"
+    try:
+        local_data.mkdir(parents=True, exist_ok=True)
+        test_file = local_data / ".write_test"
+        test_file.touch()
+        test_file.unlink(missing_ok=True)
+        return local_data
+    except Exception:
+        return fallback_dir
+
+DATA_DIR = _determine_data_dir()
 DATABASE_DIR = DATA_DIR / "database"
 REPORTS_DIR = DATA_DIR / "reports"
 LOGS_DIR = DATA_DIR / "logs"
 ASSETS_DIR = BASE_DIR / "assets"
 
-# Ensure directories exist
 for _dir in [DATA_DIR, DATABASE_DIR, REPORTS_DIR, LOGS_DIR]:
     _dir.mkdir(parents=True, exist_ok=True)
 
-DATABASE_URL = f"sqlite:///{DATABASE_DIR / 'dtr.db'}"
+DATABASE_FILE = DATABASE_DIR / "dtr.db"
+DATABASE_URL = f"sqlite:///{DATABASE_FILE.as_posix()}"
 
 # ─── App Info ────────────────────────────────────────────────────────────────
 APP_NAME = "DTR Management System"

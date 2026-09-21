@@ -1,18 +1,21 @@
 """
 SQLAlchemy Database Engine & Session Management
 """
+from __future__ import annotations
+import sqlite3
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
-from app.core.config import DATABASE_URL
+from app.core.config import DATABASE_FILE, DATABASE_URL
 
 
 class Base(DeclarativeBase):
     pass
 
 
+# Use creator to connect cleanly to local / UNC / special paths
 engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False},
+    "sqlite://",
+    creator=lambda: sqlite3.connect(str(DATABASE_FILE), check_same_thread=False),
     echo=False,
 )
 

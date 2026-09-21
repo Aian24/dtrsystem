@@ -3,7 +3,12 @@ ORM Models — DTR Management System
 """
 from __future__ import annotations
 
-import bcrypt
+try:
+    import bcrypt
+    _HAS_BCRYPT = True
+except Exception:
+    _HAS_BCRYPT = False
+
 from datetime import datetime, date, time
 from typing import Optional, List
 
@@ -158,15 +163,39 @@ class User(Base):
     last_login:   Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
     def set_password(self, password: str) -> None:
-        self.password_hash = bcrypt.hashpw(
-            password.encode("utf-8"), bcrypt.gensalt()
-        ).decode("utf-8")
+        if _HAS_BCRYPT:
+            try:
+                self.password_hash = bcrypt.hashpw(
+                    password.encode("utf-8"), bcrypt.gensalt()
+                ).decode("utf-8")
+                return
+            except Exception:
+                pass
+        import hashlib, secrets
+        salt = secrets.token_hex(16)
+        key = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt.encode("utf-8"), 100000).hex()
+        self.password_hash = f"pbkdf2:{salt}:{key}"
 
     def check_password(self, password: str) -> bool:
-        return bcrypt.checkpw(
-            password.encode("utf-8"),
-            self.password_hash.encode("utf-8")
-        )
+        if not self.password_hash:
+            return False
+        if self.password_hash.startswith("pbkdf2:"):
+            import hashlib, hmac
+            try:
+                _, salt, key = self.password_hash.split(":", 2)
+                check_key = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt.encode("utf-8"), 100000).hex()
+                return hmac.compare_digest(key, check_key)
+            except Exception:
+                return False
+        if _HAS_BCRYPT:
+            try:
+                return bcrypt.checkpw(
+                    password.encode("utf-8"),
+                    self.password_hash.encode("utf-8")
+                )
+            except Exception:
+                return False
+        return False
 
     def __repr__(self) -> str:
         return f"<User {self.username} ({self.role})>"

@@ -1,11 +1,13 @@
 """
 Employee Portal Page — Public landing page for viewing DTR
 """
+from __future__ import annotations
 from nicegui import ui
 from datetime import date
 from app.core.database import SessionLocal
 from app.core.models import Company, CutoffPeriod, Employee
 from app.components.notifications import toast_error
+from app.components.search_select import search_select
 
 def portal_page():
     """Render the public Employee Portal (no sidebar/navbar)."""
@@ -111,33 +113,52 @@ def portal_page():
         # Card
         with ui.element("div").classes("glass-card").style("position: relative; width: 100%; max-width: 720px; padding: 32px 24px; margin: 0 auto;"):
             
-            # Admin Link (Badge)
+            # Badges (User Manual & Admin Link)
             ui.html('''
-            <a href="/login" style="
-                position: absolute;
-                top: 16px;
-                right: 16px;
-                display: inline-flex; 
-                align-items: center; 
-                gap: 4px;
-                color: #94a3b8; 
-                font-size: 11px; 
-                text-decoration: none; 
-                font-weight: 700;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-                padding: 4px 10px;
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                border-radius: 8px;
-                background: rgba(0, 0, 0, 0.2);
-                transition: all 0.3s ease;
-                backdrop-filter: blur(10px);
-                z-index: 10;
-            " onmouseover="this.style.background='rgba(255, 255, 255, 0.1)'; this.style.color='#ffffff';" 
-               onmouseout="this.style.background='rgba(0, 0, 0, 0.2)'; this.style.color='#94a3b8';">
-              <span class="material-icons-round" style="font-size:14px;">admin_panel_settings</span>
-              Admin
-            </a>
+            <div style="position: absolute; top: 16px; right: 16px; display: flex; align-items: center; gap: 8px; z-index: 10;">
+              <a href="/manual" target="_blank" style="
+                  display: inline-flex; 
+                  align-items: center; 
+                  gap: 4px;
+                  color: #38bdf8; 
+                  font-size: 11px; 
+                  text-decoration: none; 
+                  font-weight: 700;
+                  text-transform: uppercase;
+                  letter-spacing: 0.5px;
+                  padding: 4px 10px;
+                  border: 1px solid rgba(56, 189, 248, 0.3);
+                  border-radius: 8px;
+                  background: rgba(14, 165, 233, 0.15);
+                  transition: all 0.3s ease;
+                  backdrop-filter: blur(10px);
+              " onmouseover="this.style.background='rgba(56, 189, 248, 0.3)'; this.style.color='#ffffff';" 
+                 onmouseout="this.style.background='rgba(14, 165, 233, 0.15)'; this.style.color='#38bdf8';">
+                <span class="material-icons-round" style="font-size:14px;">menu_book</span>
+                Manual
+              </a>
+              <a href="/login" style="
+                  display: inline-flex; 
+                  align-items: center; 
+                  gap: 4px;
+                  color: #94a3b8; 
+                  font-size: 11px; 
+                  text-decoration: none; 
+                  font-weight: 700;
+                  text-transform: uppercase;
+                  letter-spacing: 0.5px;
+                  padding: 4px 10px;
+                  border: 1px solid rgba(255, 255, 255, 0.1);
+                  border-radius: 8px;
+                  background: rgba(0, 0, 0, 0.2);
+                  transition: all 0.3s ease;
+                  backdrop-filter: blur(10px);
+              " onmouseover="this.style.background='rgba(255, 255, 255, 0.1)'; this.style.color='#ffffff';" 
+                 onmouseout="this.style.background='rgba(0, 0, 0, 0.2)'; this.style.color='#94a3b8';">
+                <span class="material-icons-round" style="font-size:14px;">admin_panel_settings</span>
+                Admin
+              </a>
+            </div>
             ''')
 
             # Header
@@ -182,19 +203,19 @@ def portal_page():
             with ui.element("div").style("display: flex; gap: 16px; margin-bottom: 20px; width: 100%;"):
                 with ui.element("div").style("flex: 1;"):
                     ui.html('<div style="color:#E2E8F0;font-size:12px;font-weight:700;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;">Company</div>')
-                    company_sel = ui.select(
+                    company_sel = search_select(
                         options={0: "— Select Company —", **companies},
                         value=0,
-                    ).classes("glass-input").props('dark standout').style("width:100%;")
+                    ).classes("glass-input").props('dark standout options-dense').style("width:100%;")
                     with company_sel.add_slot('prepend'):
                         ui.icon('business', color='white')
 
                 with ui.element("div").style("flex: 1;"):
                     ui.html('<div style="color:#E2E8F0;font-size:12px;font-weight:700;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;">Cutoff Rule</div>')
-                    cutoff_sel = ui.select(
+                    cutoff_sel = search_select(
                         options={0: "— Select Cutoff —"},
                         value=0,
-                    ).classes("glass-input").props('dark standout').style("width:100%;")
+                    ).classes("glass-input").props('dark standout options-dense').style("width:100%;")
                     with cutoff_sel.add_slot('prepend'):
                         ui.icon('date_range', color='white')
 

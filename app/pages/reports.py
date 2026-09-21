@@ -1,6 +1,7 @@
 """
 Reports Page — Generate and export various attendance reports
 """
+from __future__ import annotations
 from nicegui import ui
 from datetime import date
 
@@ -9,16 +10,18 @@ from app.theme.icons import IC
 from app.core.database import SessionLocal
 from app.core.models import Company
 from app.components.notifications import toast_info, toast_success, toast_error
+from app.components.search_select import search_select
+from app.components.date_picker import modern_date_picker
 
 
 REPORT_TYPES = [
-    ("dtr",       "Employee DTR",          IC.BADGE,    "Individual employee daily time record"),
-    ("daily",     "Daily Attendance",      IC.ATTENDANCE,"All employees attendance for a specific day"),
-    ("monthly",   "Monthly Attendance",    IC.CALENDAR, "Monthly attendance summary per employee"),
-    ("company",   "Company Attendance",    IC.COMPANIES,"Attendance report grouped by company"),
-    ("late",      "Late Report",           IC.LATE,     "Employees who arrived late"),
-    ("absent",    "Absent Report",         IC.ABSENT,   "Employees with no log entries"),
-    ("missing",   "Missing Logs Report",   IC.WARNING,  "Days with incomplete or missing time records"),
+    ("dtr",       "Employee DTR",          IC.BADGE,    "Individual employee daily time record", "#2563EB", "#EFF6FF"),
+    ("daily",     "Daily Attendance",      IC.ATTENDANCE,"All employees attendance for a specific day", "#10B981", "#ECFDF5"),
+    ("monthly",   "Monthly Attendance",    IC.CALENDAR, "Monthly attendance summary per employee", "#6366F1", "#EEF2FF"),
+    ("company",   "Company Attendance",    IC.COMPANIES,"Attendance report grouped by company", "#0EA5E9", "#F0F9FF"),
+    ("late",      "Late Report",           IC.LATE,     "Employees who arrived late", "#F59E0B", "#FFFBEB"),
+    ("absent",    "Absent Report",         IC.ABSENT,   "Employees with no log entries", "#EF4444", "#FEF2F2"),
+    ("missing",   "Missing Logs Report",   IC.WARNING,  "Days with incomplete or missing time records", "#EC4899", "#FDF2F8"),
 ]
 
 
@@ -35,31 +38,35 @@ def reports_page():
         </div>
         ''')
 
-        with ui.element("div").style("display:grid;grid-template-columns:300px 1fr;gap:24px;"):
+        with ui.element("div").style("display:grid;grid-template-columns:320px 1fr;gap:24px;"):
 
             # ── Report Type Selector ──────────────────────────────────────────
             with ui.element("div"):
                 with ui.element("div").classes("card"):
                     with ui.element("div").classes("card-header"):
                         ui.html('<span class="card-title">Report Type</span>')
-                    with ui.element("div").classes("card-body").style("padding:12px;"):
+                    with ui.element("div").classes("card-body").style("padding:10px;display:flex;flex-direction:column;gap:4px;"):
                         report_btns = {}
                         form_container = ui.element("div")  # Will be updated below
 
                         def select_report(rtype, btn_el):
                             selected["type"] = rtype
                             for k, b in report_btns.items():
-                                b.style(remove="background:rgba(37,99,235,.1);color:var(--color-primary);font-weight:600;")
-                            btn_el.style("background:rgba(37,99,235,.1);color:var(--color-primary);font-weight:600;")
+                                b.style(remove="background:linear-gradient(135deg, rgba(37,99,235,0.12), rgba(99,102,241,0.08));border-left:3px solid #2563EB;box-shadow:0 2px 8px rgba(37,99,235,0.12);")
+                            btn_el.style("background:linear-gradient(135deg, rgba(37,99,235,0.12), rgba(99,102,241,0.08));border-left:3px solid #2563EB;box-shadow:0 2px 8px rgba(37,99,235,0.12);")
                             render_form(rtype)
 
-                        for rtype, label, icon, desc in REPORT_TYPES:
-                            btn = ui.element("div").classes("nav-item").style("border-radius:8px;")
+                        for rtype, label, icon, desc, color, bg_color in REPORT_TYPES:
+                            btn = ui.element("div").classes("nav-item").style("border-radius:10px;padding:10px 12px;transition:all 0.2s ease;")
                             with btn:
-                                ui.html(f'<span class="material-icons-round" style="font-size:18px;">{icon}</span>')
-                                with ui.element("div"):
-                                    ui.html(f'<div style="font-size:13px;font-weight:500;">{label}</div>')
-                                    ui.html(f'<div style="font-size:11px;color:var(--text-muted);">{desc}</div>')
+                                ui.html(f'''
+                                <div style="width:34px;height:34px;border-radius:8px;background:{bg_color};color:{color};display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+                                  <span class="material-icons-round" style="font-size:19px;">{icon}</span>
+                                </div>
+                                ''')
+                                with ui.element("div").style("flex:1;margin-left:4px;"):
+                                    ui.html(f'<div style="font-size:13px;font-weight:600;color:var(--text-primary);">{label}</div>')
+                                    ui.html(f'<div style="font-size:11px;color:var(--text-muted);margin-top:1px;">{desc}</div>')
 
                             btn.on("click", lambda e, rt=rtype, b=btn: select_report(rt, b))
                             report_btns[rtype] = btn
@@ -85,32 +92,34 @@ def reports_page():
                                     emp_options = {e.id: f"{e.last_name}, {e.first_name} ({e.emp_id})" for e in emps}
                                     
                                     ui.html('<div class="form-label">Employee</div>')
-                                    form_refs["employee"] = ui.select(
-                                        options=emp_options, value=list(emp_options.keys())[0] if emp_options else None
-                                    ).props("outlined dense").style("width:100%;margin-bottom:14px;")
+                                    form_refs["employee"] = search_select(
+                                        options=emp_options, 
+                                        value=list(emp_options.keys())[0] if emp_options else None,
+                                    ).props("outlined dense options-dense").style("width:100%;margin-bottom:14px;")
                                 else:
                                     cos = db.query(Company).filter(Company.is_active == True).all()
                                     co_options = {0: "— All Companies —", **{c.id: c.name for c in cos}}
     
                                     ui.html('<div class="form-label">Company</div>')
-                                    form_refs["company"] = ui.select(
-                                        options=co_options, value=0
-                                    ).props("outlined dense").style("width:100%;margin-bottom:14px;")
+                                    form_refs["company"] = search_select(
+                                        options=co_options, 
+                                        value=0,
+                                    ).props("outlined dense options-dense").style("width:100%;margin-bottom:14px;")
                             finally:
                                 db.close()
 
                             with ui.element("div").classes("grid-cols-2").style("margin-bottom:14px;"):
                                 with ui.element("div"):
                                     ui.html('<div class="form-label">Date From</div>')
-                                    form_refs["date_from"] = ui.input(
+                                    form_refs["date_from"] = modern_date_picker(
                                         value=date.today().replace(day=1).isoformat()
-                                    ).props("outlined dense type=date").style("width:100%;")
+                                    ).style("width:100%;")
 
                                 with ui.element("div"):
                                     ui.html('<div class="form-label">Date To</div>')
-                                    form_refs["date_to"] = ui.input(
+                                    form_refs["date_to"] = modern_date_picker(
                                         value=date.today().isoformat()
-                                    ).props("outlined dense type=date").style("width:100%;")
+                                    ).style("width:100%;")
 
                             # Export buttons
                             ui.element("div").classes("separator")

@@ -1,6 +1,7 @@
 """
 Companies Page — Manage companies and their settings
 """
+from __future__ import annotations
 from nicegui import ui
 from sqlalchemy.orm import Session
 
@@ -10,6 +11,7 @@ from app.components.notifications import toast_success, toast_error
 from app.theme.icons import IC
 from app.core.database import SessionLocal
 from app.core.models import Company, Employee
+from app.components.search_select import search_select
 
 
 def _get_companies():
@@ -72,7 +74,7 @@ def confirm_delete_company(company_ids: list[int], name: str, on_success=None):
             
             with ui.row().classes("w-full justify-end"):
                 ui.button("Cancel", on_click=dialog.close).classes("btn btn-secondary")
-                ui.button("Delete", on_click=lambda: [dialog.close(), delete_companies(company_ids, on_success)]).classes("btn").style("background-color: #ef4444 !important; color: white !important;")
+                ui.button("Delete", on_click=lambda: [dialog.close(), delete_companies(company_ids, on_success)]).classes("btn btn-danger")
     dialog.open()
 
 
@@ -83,8 +85,8 @@ def open_edit_dialog(row, on_success):
         form["name"] = ui.input("Company Name *", value=row["name"]).props("outlined dense").style("width:100%;margin-bottom:14px;")
         form["address"] = ui.textarea("Address", value=row["_address"]).props("outlined").style("width:100%;margin-bottom:14px;")
         with ui.element("div").classes("grid-cols-2"):
-            form["area_manager"] = ui.input("Area Manager", value=row["_area_manager"]).props("outlined dense").style("width:100%;margin-bottom:14px;")
-            form["store_supervisor"] = ui.input("Store Supervisor", value=row["_store_supervisor"]).props("outlined dense").style("width:100%;margin-bottom:14px;")
+            form["area_manager"] = ui.input("Approved By (1)", value=row["_area_manager"]).props("outlined dense").style("width:100%;margin-bottom:14px;").tooltip("Primary approver name on DTR sheets")
+            form["store_supervisor"] = ui.input("Approved By (2)", value=row["_store_supervisor"]).props("outlined dense").style("width:100%;margin-bottom:14px;").tooltip("Secondary approver name on DTR sheets")
         with ui.element("div").classes("grid-cols-3"):
             form["grace"] = ui.number("Grace Period (min)", value=row["_grace"], min=0, max=60).props("outlined dense")
 
@@ -119,8 +121,8 @@ def open_add_dialog(on_success):
         form["name"] = ui.input("Company Name *").props("outlined dense").style("width:100%;margin-bottom:14px;")
         form["address"] = ui.textarea("Address").props("outlined").style("width:100%;margin-bottom:14px;")
         with ui.element("div").classes("grid-cols-2"):
-            form["area_manager"] = ui.input("Area Manager").props("outlined dense").style("width:100%;margin-bottom:14px;")
-            form["store_supervisor"] = ui.input("Store Supervisor").props("outlined dense").style("width:100%;margin-bottom:14px;")
+            form["area_manager"] = ui.input("Approved By (1)").props("outlined dense").style("width:100%;margin-bottom:14px;").tooltip("Primary approver name on DTR sheets")
+            form["store_supervisor"] = ui.input("Approved By (2)").props("outlined dense").style("width:100%;margin-bottom:14px;").tooltip("Secondary approver name on DTR sheets")
         with ui.element("div").classes("grid-cols-3"):
             form["grace"] = ui.number("Grace Period (min)", value=10, min=0, max=60).props("outlined dense")
 
@@ -150,7 +152,13 @@ def open_add_dialog(on_success):
 
 
 def companies_page():
-    table_state = {"search": "", "page": 1, "limit": 10}
+    table_state = {
+        "search": "",
+        "grace_filter": "all",
+        "emp_filter": "all",
+        "page": 1,
+        "limit": 10
+    }
 
     @ui.refreshable
     def history_container():
@@ -193,8 +201,7 @@ def companies_page():
                 
                 bulk_actions = ui.element("div").style("display: none;")
                 with bulk_actions:
-                    bulk_btn = ui.button("Delete Selected", icon=IC.DELETE, on_click=trigger_bulk_delete)
-                    bulk_btn.props("size=sm").style("background-color: #ef4444 !important; color: white !important;")
+                    bulk_btn = ui.button("Delete Selected", icon=IC.DELETE, on_click=trigger_bulk_delete).classes("btn btn-danger btn-sm")
 
             def update_bulk_actions():
                 if len(selected_rows) > 0:
@@ -203,31 +210,109 @@ def companies_page():
                 else:
                     bulk_actions.style("display: none;")
 
-            with ui.element("div").style("padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); gap: 16px; flex-wrap: wrap;"):
-                with ui.element("div").style("display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted);"):
-                    ui.html("<span>Show</span>")
-                    def update_limit(e):
-                        table_state["limit"] = e.value
+            # ── Multi-criteria Filter Bar ──────────────────────────────────────────
+            with ui.element("div").style(
+                "padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; "
+                "border-bottom: 1px solid var(--border); gap: 12px; flex-wrap: wrap; background: var(--bg-subtle);"
+            ):
+                with ui.element("div").style("display: flex; align-items: center; gap: 10px; flex-wrap: wrap; flex: 1;"):
+                    # Show entries
+                    with ui.element("div").style("display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-muted);"):
+                        ui.html("<span>Show</span>")
+                        def update_limit(e):
+                            table_state["limit"] = e.value
+                            table_state["page"] = 1
+                            table_content.refresh()
+                        ui.select(options=[10, 25, 50, 100], value=table_state["limit"], on_change=update_limit).props('dense outlined options-dense').style("width: 75px;")
+
+                    # Grace period filter
+                    grace_options = {
+                        "all": "— All Grace Periods —",
+                        "0-5": "0 – 5 mins",
+                        "10": "10 mins (Standard)",
+                        "15+": "15+ mins"
+                    }
+                    def update_grace_filter(e):
+                        table_state["grace_filter"] = e.value
                         table_state["page"] = 1
                         table_content.refresh()
-                    ui.select(options=[10, 25, 50, 100], value=table_state["limit"], on_change=update_limit).props('dense outlined').style("width: 70px;")
-                    ui.html("<span>entries</span>")
-                    
-                with ui.element("div"):
+                    grace_sel = search_select(
+                        options=grace_options,
+                        value=table_state["grace_filter"],
+                        on_change=update_grace_filter,
+                        label="Grace Period",
+                    ).props('dense outlined options-dense').style("min-width: 170px;")
+
+                    # Employee Count Filter
+                    emp_filter_options = {
+                        "all": "— All Statuses —",
+                        "has_emps": "With Employees (>0)",
+                        "no_emps": "No Employees (0)"
+                    }
+                    def update_emp_filter(e):
+                        table_state["emp_filter"] = e.value
+                        table_state["page"] = 1
+                        table_content.refresh()
+                    emp_filter_sel = search_select(
+                        options=emp_filter_options,
+                        value=table_state["emp_filter"],
+                        on_change=update_emp_filter,
+                        label="Employee Presence",
+                    ).props('dense outlined options-dense').style("min-width: 170px;")
+
+                with ui.element("div").style("display: flex; align-items: center; gap: 8px; flex-wrap: wrap;"):
                     def update_search(e):
                         val = e.value or ""
                         if table_state["search"] != val:
                             table_state["search"] = val
                             table_state["page"] = 1
                             table_content.refresh()
-                    ui.input(placeholder="Search...", value=table_state["search"], on_change=update_search).props('dense outlined clearable').style("width: 250px;")
+                    search_inp = ui.input(placeholder="Search companies...", value=table_state["search"], on_change=update_search).props('dense outlined clearable').style("width: 220px;")
+
+                    # Reset filters button
+                    def reset_filters():
+                        table_state["search"] = ""
+                        table_state["grace_filter"] = "all"
+                        table_state["emp_filter"] = "all"
+                        table_state["page"] = 1
+                        search_inp.value = ""
+                        grace_sel.value = "all"
+                        emp_filter_sel.value = "all"
+                        table_content.refresh()
+
+                    ui.button("Reset", icon="filter_alt_off", on_click=reset_filters).classes("btn btn-reset btn-sm").tooltip("Clear all filters")
 
             with ui.element("div").classes("card-body").style("padding: 0; overflow-x: auto;"):
                 @ui.refreshable
                 def table_content():
                     import math
-                    term = table_state["search"].lower()
-                    filtered_rows = [r for r in rows if term in r['name'].lower() or term in (r['address'] or '').lower()] if term else rows
+                    term = table_state["search"].lower().strip()
+                    g_filt = table_state["grace_filter"]
+                    e_filt = table_state["emp_filter"]
+
+                    filtered_rows = rows
+                    # 1. Search term
+                    if term:
+                        filtered_rows = [
+                            r for r in filtered_rows 
+                            if term in r['name'].lower() 
+                            or term in (r['address'] or '').lower()
+                            or term in (r['_area_manager'] or '').lower()
+                            or term in (r['_store_supervisor'] or '').lower()
+                        ]
+                    # 2. Grace period filter
+                    if g_filt == "0-5":
+                        filtered_rows = [r for r in filtered_rows if r['_grace'] <= 5]
+                    elif g_filt == "10":
+                        filtered_rows = [r for r in filtered_rows if r['_grace'] == 10]
+                    elif g_filt == "15+":
+                        filtered_rows = [r for r in filtered_rows if r['_grace'] >= 15]
+
+                    # 3. Employee presence filter
+                    if e_filt == "has_emps":
+                        filtered_rows = [r for r in filtered_rows if r['employees'] > 0]
+                    elif e_filt == "no_emps":
+                        filtered_rows = [r for r in filtered_rows if r['employees'] == 0]
                 
                     total_items = len(filtered_rows)
                     total_pages = math.ceil(total_items / table_state["limit"]) or 1
@@ -238,13 +323,14 @@ def companies_page():
                     end_idx = start_idx + table_state["limit"]
                     paged_rows = filtered_rows[start_idx:end_idx]
 
+                    checkboxes.clear()
 
                     if not filtered_rows:
                         ui.html('''
                         <div class="empty-state">
                           <span class="material-icons-round">business</span>
-                          <div class="empty-state-title">No companies found</div>
-                          <div class="empty-state-subtitle">Add your first company to get started.</div>
+                          <div class="empty-state-title">No companies match your filters</div>
+                          <div class="empty-state-subtitle">Try adjusting your search criteria or resetting filters.</div>
                         </div>
                         ''')
                     else:
@@ -269,12 +355,12 @@ def companies_page():
                                 for r in paged_rows:
                                     with ui.element("tr"):
                                         with ui.element("td").style("text-align: center;"):
-                                            cb = ui.checkbox(on_change=lambda ev, rid=r["id"]: toggle_row(rid, ev.value))
+                                            cb = ui.checkbox(value=r["id"] in selected_rows, on_change=lambda ev, rid=r["id"]: toggle_row(rid, ev.value))
                                             checkboxes.append(cb)
                                         with ui.element("td"):
                                             ui.html(f"<strong>{r['name']}</strong>")
                                         with ui.element("td"):
-                                            ui.html(f"{r['employees']}")
+                                            ui.html(f"<span class='badge badge-info'>{r['employees']} Active</span>")
                                         with ui.element("td"):
                                             ui.html(f"{r['grace_period']}")
                                         with ui.element("td"):
@@ -284,16 +370,17 @@ def companies_page():
                                                 ui.button(
                                                     icon=IC.EDIT, 
                                                     on_click=lambda r=r: open_edit_dialog(r, handle_success)
-                                                ).props('flat round size=sm color="primary"').tooltip("Edit Company")
+                                                ).classes("action-btn-edit").props('flat round dense').tooltip("Edit Company")
                                                 ui.button(
                                                     icon=IC.DELETE, 
                                                     on_click=lambda r=r: confirm_delete_company([r["id"]], r["name"], handle_success)
-                                                ).props('flat round size=sm color="negative"').style("color: #ef4444 !important;").tooltip("Delete Company")
+                                                ).classes("action-btn-delete").props('flat round dense').tooltip("Delete Company")
 
                     with ui.element("div").style("padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 16px;"):
                         showing_start = start_idx + 1 if total_items > 0 else 0
                         showing_end = min(end_idx, total_items)
-                        ui.html(f'<span style="font-size: 13px; color: var(--text-muted);">Showing {showing_start} to {showing_end} of {total_items} entries</span>')
+                        filtered_text = f" (filtered from {len(rows)} total)" if total_items != len(rows) else ""
+                        ui.html(f'<span style="font-size: 13px; color: var(--text-muted);">Showing {showing_start} to {showing_end} of {total_items} entries{filtered_text}</span>')
                     
                         def update_page(e):
                             table_state["page"] = e.value

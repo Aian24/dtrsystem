@@ -1,6 +1,7 @@
 """
 Animated Sidebar Component
 """
+from __future__ import annotations
 from nicegui import ui, app as ngapp
 from app.theme.icons import IC
 
@@ -22,6 +23,7 @@ NAV_ITEMS = [
     ("system", [
         (IC.USER,       "User Accounts",   "/users"),
         (IC.SETTINGS,   "Settings",        "/settings"),
+        ("menu_book",   "System Manual",   "/manual"),
     ]),
 ]
 
@@ -59,8 +61,9 @@ def sidebar(current_path: str = "/dashboard"):
                 for icon, nav_label, route in items:
                     is_active = current_path == route
                     active_cls = "active" if is_active else ""
+                    extra_props = ' target="_blank"' if route == "/manual" else ""
 
-                    with ui.element("a").props(f'href="{route}"').classes(f"nav-item {active_cls}"):
+                    with ui.element("a").props(f'href="{route}"{extra_props}').classes(f"nav-item {active_cls}"):
                         ui.html(f'<span class="material-icons-round">{icon}</span>')
                         ui.html(f'<span class="nav-label">{nav_label}</span>')
 

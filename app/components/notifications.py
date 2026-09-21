@@ -2,6 +2,7 @@
 Toast Notification System — Python-side helpers
 Actual rendering done in JS via DTR.showToast() in styles.py
 """
+from __future__ import annotations
 from nicegui import ui
 
 
