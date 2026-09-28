@@ -148,7 +148,7 @@ def compute_dtr(
                 current += timedelta(days=1)
                 continue
 
-            # Setup dynamic target boundaries
+            # Setup target for late calculation
             def get_target(field_name, default_time_obj):
                 # 1. Custom Daily Schedule
                 if custom_schedule and custom_schedule.get(field_name):
@@ -165,45 +165,59 @@ def compute_dtr(
                 return default_time_obj
 
             w_start_target = get_target("work_start", time(8, 0))
-            bo1_target = get_target("break_out_1", time(12, 0))
-            bi1_target = get_target("break_in_1", time(13, 0))
-            bo2_target = get_target("break_out_2", time(16, 0))
-            bi2_target = get_target("break_in_2", time(16, 30))
-            w_end_target = get_target("work_end", time(17, 0))
 
-            def get_midpoint(t1, t2):
-                if not t1 or not t2: return None
-                dt1 = datetime.combine(current, t1)
-                dt2 = datetime.combine(current, t2)
-                return (dt1 + (dt2 - dt1) / 2).time()
-                
-            b1 = get_midpoint(w_start_target, bo1_target) or time(10, 0)
-            b2 = get_midpoint(bo1_target, bi1_target) or time(12, 30)
-            b3 = get_midpoint(bi1_target, bo2_target) or time(14, 30)
-            b4 = get_midpoint(bo2_target, bi2_target) or time(16, 15)
-            b5 = get_midpoint(bi2_target, w_end_target) or time(16, 45)
-
-            # Categorize logs dynamically
+            # Deduplicate logs within 60 seconds
             day_logs.sort(key=lambda l: l.log_datetime)
+            unique_day_logs = []
+            for l in day_logs:
+                if not unique_day_logs:
+                    unique_day_logs.append(l)
+                else:
+                    diff = (l.log_datetime - unique_day_logs[-1].log_datetime).total_seconds()
+                    if diff >= 60 or l.direction != unique_day_logs[-1].direction:
+                        unique_day_logs.append(l)
+
+            # Categorize punches sequentially without limiting first/second break by time of day
             time_in_log = None
             time_out_log = None
             bo1 = bi1 = bo2 = bi2 = None
-            
-            for log in day_logs:
-                t = log.log_datetime.time()
-                fmt_t = fmt(log.log_datetime)
-                if t < b1:
-                    if not time_in_log: time_in_log = log
-                elif b1 <= t < b2:
-                    if not bo1: bo1 = fmt_t
-                elif b2 <= t < b3:
-                    if not bi1: bi1 = fmt_t
-                elif b3 <= t < b4:
-                    if not bo2: bo2 = fmt_t
-                elif b4 <= t < b5:
-                    if not bi2: bi2 = fmt_t
-                elif t >= b5:
-                    time_out_log = log
+            n_logs = len(unique_day_logs)
+
+            if n_logs == 1:
+                # If only 1 log and direction is explicitly OUT, treat as time out
+                if unique_day_logs[0].direction == "O":
+                    time_out_log = unique_day_logs[0]
+                else:
+                    time_in_log = unique_day_logs[0]
+            elif n_logs == 2:
+                if unique_day_logs[0].direction == "O" and unique_day_logs[1].direction == "O":
+                    bo1 = fmt(unique_day_logs[0].log_datetime)
+                    time_out_log = unique_day_logs[1]
+                else:
+                    time_in_log = unique_day_logs[0]
+                    time_out_log = unique_day_logs[1]
+            elif n_logs == 3:
+                time_in_log = unique_day_logs[0]
+                bo1 = fmt(unique_day_logs[1].log_datetime)
+                time_out_log = unique_day_logs[2]
+            elif n_logs == 4:
+                time_in_log = unique_day_logs[0]
+                bo1 = fmt(unique_day_logs[1].log_datetime)
+                bi1 = fmt(unique_day_logs[2].log_datetime)
+                time_out_log = unique_day_logs[3]
+            elif n_logs == 5:
+                time_in_log = unique_day_logs[0]
+                bo1 = fmt(unique_day_logs[1].log_datetime)
+                bi1 = fmt(unique_day_logs[2].log_datetime)
+                bo2 = fmt(unique_day_logs[3].log_datetime)
+                time_out_log = unique_day_logs[4]
+            elif n_logs >= 6:
+                time_in_log = unique_day_logs[0]
+                bo1 = fmt(unique_day_logs[1].log_datetime)
+                bi1 = fmt(unique_day_logs[2].log_datetime)
+                bo2 = fmt(unique_day_logs[3].log_datetime)
+                bi2 = fmt(unique_day_logs[4].log_datetime)
+                time_out_log = unique_day_logs[-1]
 
             # Late computation
             is_late = False
@@ -219,37 +233,6 @@ def compute_dtr(
                     start_dt = datetime.combine(current, w_start_target)
                     late_min = int((in_dt - start_dt).total_seconds() / 60)
 
-            # Undertime computation (Employee specific)
-            undertime_min = 0
-            
-            # Use the very last punch of the day to calculate undertime, 
-            # even if it wasn't classified as a time out log (e.g. they left at 3:35 PM and it landed in 2nd BO)
-            last_punch_for_undertime = time_out_log or (day_logs[-1] if len(day_logs) > 0 else None)
-            
-            if last_punch_for_undertime and not is_rest_day:
-                t_out = last_punch_for_undertime.log_datetime.time()
-                if t_out < w_end_target:
-                    out_dt = datetime.combine(current, t_out)
-                    end_dt = datetime.combine(current, w_end_target)
-                    total_under = int((end_dt - out_dt).total_seconds() / 60)
-                    
-                    # Deduct break times if they overlap
-                    def deduct_break(b_start, b_end, t_under):
-                        if not b_start or not b_end: return t_under
-                        bs = datetime.combine(current, b_start)
-                        be = datetime.combine(current, b_end)
-                        overlap_start = max(out_dt, bs)
-                        overlap_end = min(end_dt, be)
-                        if overlap_start < overlap_end:
-                            return t_under - int((overlap_end - overlap_start).total_seconds() / 60)
-                        return t_under
-
-                    total_under = deduct_break(bo1_target, bi1_target, total_under)
-                    total_under = deduct_break(bo2_target, bi2_target, total_under)
-                    
-                    if total_under > 0:
-                        undertime_min = total_under
-
             remarks = ""
             if is_rest_day:
                 remarks = "Rest Day Duty"
@@ -261,6 +244,11 @@ def compute_dtr(
                     remarks = "Rest Day Duty / No Time Out"
                 else:
                     remarks = "No Time Out" if not is_late else "Late / No Time Out"
+            elif not time_in_log and time_out_log:
+                if is_rest_day:
+                    remarks = "Rest Day Duty / No Time In"
+                else:
+                    remarks = "No Time In"
 
             entries.append({
                 "date":         current,
@@ -272,10 +260,9 @@ def compute_dtr(
                 "time_out":     fmt(time_out_log.log_datetime) if time_out_log else None,
                 "is_late":      is_late,
                 "late_minutes": late_min,
-                "undertime_minutes": undertime_min,
+                "undertime_minutes": 0,
                 "remarks":      remarks,
             })
-
 
             current += timedelta(days=1)
 

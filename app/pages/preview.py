@@ -78,7 +78,6 @@ def preview_page(request=None, is_public=False):
     total_absents   = sum(1 for e in dtr_entries if not has_any_punch(e) and e.get("remarks") == "Absent")
     total_late      = sum(1 for e in dtr_entries if e.get("is_late"))
     total_late_mins = sum(e.get("late_minutes") or 0 for e in dtr_entries)
-    total_undertime_hrs = sum(e.get("undertime_minutes") or 0 for e in dtr_entries) / 60.0
 
     def render_content():
         ui.add_head_html('''
@@ -311,7 +310,7 @@ def preview_page(request=None, is_public=False):
                     ui.html(f'''
                     <div class="no-print" style="margin-top:48px; padding-top:16px; border-top:1px solid #CBD5E1; font-family:'Arial', sans-serif;">
                         <div style="font-size:10px; font-weight:800; color:#475569; margin-bottom:12px; letter-spacing:0.5px;">SUMMARY OF HOURS</div>
-                        <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:12px; text-align:center;">
+                        <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; text-align:center;">
                             <div style="border:1px solid #E2E8F0; padding:10px; border-radius:6px; background:#F8FAFC;">
                                 <div style="font-size:16px; font-weight:900; color:#0A1931;">{total_days}</div>
                                 <div style="font-size:8px; font-weight:700; color:#6B7280; margin-top:4px;">DAYS PRESENT</div>
@@ -327,10 +326,6 @@ def preview_page(request=None, is_public=False):
                             <div style="border:1px solid #E2E8F0; padding:10px; border-radius:6px; background:#F8FAFC;">
                                 <div style="font-size:16px; font-weight:900; color:#F59E0B;">{total_late_mins}</div>
                                 <div style="font-size:8px; font-weight:700; color:#6B7280; margin-top:4px;">LATE (MINS)</div>
-                            </div>
-                            <div style="border:1px solid #E2E8F0; padding:10px; border-radius:6px; background:#F8FAFC;">
-                                <div style="font-size:16px; font-weight:900; color:#6366F1;">{total_undertime_hrs:.1f}</div>
-                                <div style="font-size:8px; font-weight:700; color:#6B7280; margin-top:4px;">UNDERTIME (HRS)</div>
                             </div>
                         </div>
                     </div>

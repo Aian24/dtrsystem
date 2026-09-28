@@ -5,7 +5,7 @@ a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
-    datas=[('assets', 'assets'), ('manual.html', '.')],
+    datas=[('assets', 'assets'), ('manual.html', '.'), ('app', 'app')],
     hiddenimports=['charset_normalizer', 'zk', 'zk.base', 'zk.user', 'zk.finger', 'zk.attendance', 'future'],
     hookspath=[],
     hooksconfig={},

@@ -3,7 +3,7 @@ import os
 import glob
 from PyInstaller.utils.hooks import collect_all
 
-datas = [('assets', 'assets'), ('manual.html', '.')]
+datas = [('assets', 'assets'), ('manual.html', '.'), ('app', 'app')]
 binaries = []
 hiddenimports = ['charset_normalizer', 'zk', 'zk.base', 'zk.user', 'zk.finger', 'zk.attendance', 'future']
 
